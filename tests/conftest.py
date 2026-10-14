@@ -110,6 +110,7 @@ async def make_category(
     *,
     capacity: int,
     name: str = "Table Tennis Singles",
+    waitlist_enabled: bool = True,
 ) -> dict[str, Any]:
     r = await client.post(
         f"/events/{event_id}/categories",
@@ -118,6 +119,7 @@ async def make_category(
             "sport": "table-tennis",
             "participation": "individual",
             "capacity": capacity,
+            "waitlist_enabled": waitlist_enabled,
         },
         headers=ORGANIZER,
     )

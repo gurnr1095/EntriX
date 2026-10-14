@@ -138,3 +138,17 @@ class EventDetail(EventOut):
 class RegistrationOut(BaseModel):
     registration_id: uuid.UUID
     status: RegistrationStatus
+    waitlist_position: int | None = Field(default=None, description="Only when waitlisted")
+
+
+class MyRegistrationOut(BaseModel):
+    registration_id: uuid.UUID
+    category_id: uuid.UUID
+    status: RegistrationStatus
+    waitlist_position: int | None
+    created_at: datetime
+
+
+class MyRegistrationPage(BaseModel):
+    items: list[MyRegistrationOut]
+    next_cursor: str | None

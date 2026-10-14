@@ -1,6 +1,7 @@
+import json
 import uuid
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request, Response
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +12,7 @@ from app.errors import AppError
 from app.models import Category
 from app.routers.events import category_out
 from app.schemas import CategoryOut, CategoryPatch, RegistrationOut
-from app.services import registration_service
+from app.services import idempotency, registration_service
 
 router = APIRouter(tags=["categories"])
 
@@ -47,7 +48,13 @@ async def patch_category(
                 )
             for field, value in changes.items():
                 setattr(category, field, value)
-            # Promotion of waitlisted users on capacity increase arrives in M2.
+            if new_capacity is not None:
+                # Fill any new seats from the waitlist while still holding the lock.
+                await session.flush()
+                promoted = await registration_service.promote_waitlist(
+                    session, category_id, new_capacity - category.confirmed_count
+                )
+                category.confirmed_count += promoted
             await session.flush()
     except IntegrityError as exc:
         if "categories_event_id_name_key" in str(exc.orig):
@@ -61,11 +68,27 @@ async def patch_category(
 )
 async def register(
     category_id: uuid.UUID,
+    request: Request,
     idempotency_key: str | None = Header(default=None),
     user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-) -> RegistrationOut:
+) -> Response:
     if not idempotency_key:
         raise AppError(400, "missing_idempotency_key", "Idempotency-Key header is required")
-    registration = await registration_service.register_individual(session, user, category_id)
-    return RegistrationOut(registration_id=registration.id, status=registration.status)
+    method, path = request.method, request.url.path
+    status, body = await registration_service.register_individual(
+        session,
+        user,
+        category_id,
+        idempotency_key=idempotency_key,
+        method=method,
+        path=path,
+        request_hash=idempotency.hash_request(method, path, await request.body()),
+    )
+    # jsonb does not preserve key order, so serialize with sorted keys: a fresh response
+    # and a replay are then byte-identical.
+    return Response(
+        content=json.dumps(body, sort_keys=True, separators=(",", ":")),
+        status_code=status,
+        media_type="application/json",
+    )

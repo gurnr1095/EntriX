@@ -47,12 +47,12 @@ def category_out(c: Category) -> CategoryOut:
     )
 
 
-def _encode_cursor(starts_at: datetime, event_id: uuid.UUID) -> str:
+def encode_cursor(starts_at: datetime, event_id: uuid.UUID) -> str:
     raw = json.dumps([starts_at.isoformat(), str(event_id)])
     return base64.urlsafe_b64encode(raw.encode()).decode()
 
 
-def _decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
+def decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
     try:
         starts_at, event_id = json.loads(base64.urlsafe_b64decode(cursor.encode()))
         return datetime.fromisoformat(starts_at), uuid.UUID(event_id)
@@ -86,7 +86,7 @@ async def list_events(
 ) -> EventPage:
     stmt = select(Event).where(Event.status == EventStatus.published)
     if cursor:
-        starts_at, event_id = _decode_cursor(cursor)
+        starts_at, event_id = decode_cursor(cursor)
         stmt = stmt.where(
             or_(
                 Event.starts_at > starts_at,
@@ -95,7 +95,7 @@ async def list_events(
         )
     rows = (await session.scalars(stmt.order_by(Event.starts_at, Event.id).limit(limit + 1))).all()
     page = rows[:limit]
-    next_cursor = _encode_cursor(page[-1].starts_at, page[-1].id) if len(rows) > limit else None
+    next_cursor = encode_cursor(page[-1].starts_at, page[-1].id) if len(rows) > limit else None
     return EventPage(items=[EventOut.model_validate(e) for e in page], next_cursor=next_cursor)
 
 

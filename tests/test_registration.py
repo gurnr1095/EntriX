@@ -16,11 +16,39 @@ async def _register(client: httpx.AsyncClient, category_id: str, email: str) -> 
     )
 
 
-async def test_1_capacity_under_concurrency(
+async def test_1_capacity_under_concurrency_with_waitlist(
     client: httpx.AsyncClient, open_category: dict[str, Any]
 ) -> None:
-    """200 distinct users race for 50 seats: exactly 50 win, 150 get category_full."""
+    """200 distinct users race for 50 seats: exactly 50 confirmed, 150 waitlisted."""
     cid = open_category["id"]
+    responses = await asyncio.gather(
+        *(_register(client, cid, f"user{i}@test.dev") for i in range(200))
+    )
+
+    assert {r.status_code for r in responses} == {201}
+    confirmed_resp = [r for r in responses if r.json()["status"] == "confirmed"]
+    waitlisted_resp = [r for r in responses if r.json()["status"] == "waitlisted"]
+    assert len(confirmed_resp) == 50
+    assert len(waitlisted_resp) == 150
+    # Waitlist positions are exactly 1..150, each used once.
+    assert sorted(r.json()["waitlist_position"] for r in waitlisted_resp) == list(range(1, 151))
+
+    async with engine.connect() as conn:
+        waitlisted = await conn.scalar(
+            text("SELECT count(*) FROM registrations WHERE status = 'waitlisted'")
+        )
+        counter = await conn.scalar(
+            text("SELECT confirmed_count FROM categories WHERE id = :c"), {"c": cid}
+        )
+    assert waitlisted == 150
+    assert counter == 50
+    await assert_invariants()
+
+
+async def test_1_capacity_under_concurrency_waitlist_disabled(client: httpx.AsyncClient) -> None:
+    """Same race with the waitlist off: exactly 50 confirmed, 150 get category_full."""
+    event = await make_event(client)
+    cid = (await make_category(client, event["id"], capacity=50, waitlist_enabled=False))["id"]
     responses = await asyncio.gather(
         *(_register(client, cid, f"user{i}@test.dev") for i in range(200))
     )

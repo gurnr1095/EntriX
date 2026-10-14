@@ -17,7 +17,7 @@ async def _register(client: httpx.AsyncClient, category_id: str, email: str) -> 
 
 async def test_invariants_hold_under_register_cancel_churn(client: httpx.AsyncClient) -> None:
     event = await make_event(client)
-    cat = await make_category(client, event["id"], capacity=10)
+    cat = await make_category(client, event["id"], capacity=10, waitlist_enabled=False)
     cid = cat["id"]
 
     first_wave = await asyncio.gather(
@@ -74,10 +74,10 @@ async def test_concurrent_double_cancel_releases_one_seat(
 
 async def test_cancel_frees_seat_and_allows_reregistration(client: httpx.AsyncClient) -> None:
     event = await make_event(client)
-    cat = await make_category(client, event["id"], capacity=1)
+    cat = await make_category(client, event["id"], capacity=1, waitlist_enabled=False)
     cid = cat["id"]
 
-    reg = (await _register(client, cid, "a@test.dev")).json()
+    reg =(await _register(client, cid, "a@test.dev")).json()
     assert (await _register(client, cid, "b@test.dev")).status_code == 409
 
     r = await client.delete(
