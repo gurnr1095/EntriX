@@ -11,7 +11,9 @@ from tests.conftest import ORGANIZER, as_user, idem, iso, make_category, make_ev
 def test_prod_refuses_dev_auth() -> None:
     with pytest.raises(RuntimeError):
         validate_startup(Settings(env="prod", auth_mode="dev"))
-    validate_startup(Settings(env="prod", auth_mode="clerk"))
+    with pytest.raises(RuntimeError):  # prod also refuses the placeholder QR secret
+        validate_startup(Settings(env="prod", auth_mode="clerk"))
+    validate_startup(Settings(env="prod", auth_mode="clerk", qr_secret="x" * 48))
 
 
 async def test_healthz(client: httpx.AsyncClient) -> None:

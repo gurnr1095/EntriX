@@ -98,3 +98,51 @@ Added so waitlisted users can see their position (it is in the spec's API table)
 
 ### 18. Known gap
 Idempotency rows are never deleted. A cleanup job (for example, delete rows older than 24 hours) is a later hardening item.
+
+## M3: Outbox worker, QR tokens and check-in
+
+### 19. Why an outbox at all
+The request handler never talks to SMTP. It writes an `outbox` row in the same transaction as the registration.
+So: a confirmed seat always has its email queued, and a rolled-back seat never has one (test 11 forces a crash after the insert and checks that the registration, the seat count, the outbox row and the idempotency row all vanish; the same request then succeeds).
+Without this you would have a "dual write": save to the DB, then call the mail server. If the second step fails you have a seat with no email; if you email first and the commit fails, you email about a seat that does not exist.
+
+### 20. The worker
+Loop: `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 20`, send each, mark `sent`; on failure add 1 to `attempts`, store `last_error`, push `next_attempt_at` out; after `OUTBOX_MAX_ATTEMPTS` (8) mark `failed`.
+`SKIP LOCKED` means two workers never grab the same row (tested with three workers draining 30 rows: each sent exactly once).
+Backoff is 5s, 10s, 20s ... capped at 15 minutes. The spec left this open; doubling is the usual choice, and the cap stops it waiting for hours.
+Delivery is **at-least-once**: if the worker crashes after sending but before committing, the row is retried and the email goes out twice. So each email names the registration ID and carries an `X-Entrix-Outbox-Id` header, and nothing in it is harmful if repeated.
+*Question: why not exactly-once?* Not possible across two systems (DB and mail server) without something like two-phase commit; at-least-once plus safe-to-repeat messages is the practical answer.
+
+### 21. Emails look things up at send time
+Outbox payloads hold only IDs. The worker loads the user, category and event when it sends, so there are no copied email addresses sitting in the outbox and the content is current.
+If a "confirmed" or "promoted" row is processed after that registration was cancelled, it is marked sent without emailing a QR for a dead seat (tested).
+An unknown event type fails and retries rather than silently disappearing.
+
+### 22. QR token
+`<registration_id>.<base64url(HMAC-SHA256(QR_SECRET, "reg:" + registration_id + ":" + category_id))>`.
+No personal data inside, so a photographed QR leaks nothing but an ID. Verification recomputes the HMAC from the registration's real category and compares with `hmac.compare_digest` (constant time, so response timing does not leak how many characters matched).
+An unknown registration ID returns the same `invalid_token` as a bad signature, so the endpoint cannot be used to probe which IDs exist.
+In prod the app refuses to start with the placeholder `QR_SECRET`.
+
+### 23. Check-in is idempotent by design
+The registration row is locked (`FOR UPDATE`), so ten simultaneous scans of one QR give exactly one real check-in and nine `already_checked_in: true` answers (tested). `check_ins` also uses `ON CONFLICT DO NOTHING` as a second guard.
+`confirmed_count` does not change on check-in, because it already counts `checked_in` rows.
+Waitlisted or cancelled tokens get `409 not_confirmed`; a token for another event gets `409 wrong_event`. The signature is checked first, so a forged token is always a 400 whatever event it names.
+A checked-in registration cannot be cancelled (409), which keeps the invariants simple.
+
+### 24. New dependency: segno
+Approved for drawing the QR image (pure Python, no extra dependencies, writes PNGs without Pillow). Everything else uses the standard library: `smtplib` (run through `asyncio.to_thread`) and `email`.
+
+### 25. Bug log: real problems found while verifying M3
+- **Inline image did not show in MailHog.** My first layout nested the image inside the HTML part. MailHog's UI only looks for `Content-ID` on top-level parts (it has a FIXME saying so), so the image showed as broken. The standard layout is `multipart/related[ alternative[text, html], image ]`, so I switched to it. Real mail clients handle it too.
+- **Python's email library cannot turn an `alternative` into a `related` message** ("Cannot convert alternative to related"), so the first fix attempt failed at send time. The outbox did its job here: the row stayed pending, `attempts` went up, the backoff applied, and nothing was lost. After the fix the rows were sent.
+- **"Is the QR in the email really the token?"** An early comparison said no. The cause was my check, not the email: the plain-text part is quoted-printable, which soft-wraps long lines, so my copy of the token was cut short. After decoding the part, the QR in the email and the token match module for module, and scanning that token checks the person in.
+
+### 26. Running it locally
+```
+docker compose up -d postgres mailhog
+alembic upgrade head
+uvicorn app.main:app --reload
+python -m app.worker.outbox_worker
+```
+MailHog's inbox is at http://localhost:8025.

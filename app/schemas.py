@@ -141,6 +141,26 @@ class RegistrationOut(BaseModel):
     waitlist_position: int | None = Field(default=None, description="Only when waitlisted")
 
 
+class QrOut(BaseModel):
+    token: str
+
+
+class CheckInIn(BaseModel):
+    token: str = Field(min_length=1)
+
+
+class CheckInParticipant(BaseModel):
+    name: str
+    category: str
+
+
+class CheckInOut(BaseModel):
+    registration_id: uuid.UUID
+    status: RegistrationStatus
+    already_checked_in: bool
+    participant: CheckInParticipant
+
+
 class MyRegistrationOut(BaseModel):
     registration_id: uuid.UUID
     category_id: uuid.UUID

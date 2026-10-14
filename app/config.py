@@ -16,6 +16,11 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://sportreg:sportreg@localhost:5433/sportreg_test"
     )
     qr_secret: str = "change-me"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    mail_from: str = "no-reply@sportreg.local"
+    outbox_poll_seconds: float = 2
+    outbox_max_attempts: int = 8
 
 
 @lru_cache
@@ -27,3 +32,5 @@ def validate_startup(settings: Settings) -> None:
     """Refuse to boot in unsafe configurations."""
     if settings.env == "prod" and settings.auth_mode == "dev":
         raise RuntimeError("AUTH_MODE=dev is not allowed when ENV=prod")
+    if settings.env == "prod" and settings.qr_secret in {"", "change-me"}:
+        raise RuntimeError("QR_SECRET must be set to a long random value when ENV=prod")
