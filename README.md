@@ -101,7 +101,9 @@ alembic/      migrations (no create_all in app code)
 tests/        real-Postgres tests, one file per feature
 loadtests/    Locust scenarios, runner, invariant check, results/
 render.yaml   free Render Blueprint   render.paid.yaml  full architecture
-scripts/      send_test_email (email deliverability check)   DEPLOY.md  deployment guide
+scripts/      send_test_email (email deliverability), smoke_test_deployed (20-step live check)
+tools/        clerk_test (sign-in test page: shows your token, builds PowerShell commands)
+DEPLOY.md     deployment guide
 ```
 
 ## Deploying

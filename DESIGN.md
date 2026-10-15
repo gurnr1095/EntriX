@@ -135,6 +135,25 @@ These are real; each was found by a test or a check, not by luck.
    issuer check were each deliberately weakened (one endpoint's role check removed; the issuer
    check removed) to confirm the tests fail; both did, and the code was restored.
 
+8. **A crash after the database went idle (found on the live deployment).** `GET /me` worked,
+   then later returned a plain-text 500. Neon suspends its compute after 5 idle minutes and closes
+   every connection, but the API process (kept awake by Render and by pings that deliberately do not
+   touch the database) still held those connections in its pool; the first request afterwards
+   picked up a dead one: `asyncpg InterfaceError: connection is closed`. Reproduced first by
+   having Postgres terminate every other session, then fixed with `pool_pre_ping=True` (the pool
+   tests a connection before use and replaces a dead one). Lesson: a keep-alive that avoids the
+   database guarantees every pooled connection may be stale exactly when real traffic arrives.
+
+9. **Neon's connection string did not work as copied.** It carries `sslmode=require` and
+   `channel_binding=require`; asyncpg rejects `sslmode` outright (`TypeError: unexpected keyword
+   argument`, reproduced) and does not support `channel_binding`. Fixed by normalising the URL, and
+   checked against the real Neon server by running the migration from a laptop.
+
+10. **A test script that did nothing useful the first time.** The email-deliverability script,
+    run without settings, silently fell back to the local MailHog defaults and the placeholder
+    addresses from the docs, and reported "sent". It now refuses both and says why, and the test suite
+    ignores a developer's `.env` so a real key there cannot change test results.
+
 ## What would change at 100x
 - Browse traffic: read replicas, and the cache in front of them (already in place at small scale).
 - Hot category: split the seat counter into buckets, or hand out seats from Redis and reconcile.

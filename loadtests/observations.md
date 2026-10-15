@@ -34,6 +34,10 @@ only interprets them, and says where it is guessing.
   were still in flight when Locust stopped: the server finished them, but the client had already
   moved on, so they were never recorded. I did not verify this directly. No request failed and no
   invariant broke, so it does not indicate a correctness problem.
+- **These runs predate later changes to the database pool.** `pool_pre_ping` (the pool tests
+  each connection before using it) was added afterwards, after a crash on the live free-tier
+  deployment. It adds one very small round trip per connection checkout, so latencies today may
+  differ slightly from the tables above. The load test was not re-run.
 - **Only one run per configuration.** The difference between caching off and on is large, but the
   exact multiples should not be quoted as precise.
 - **Not measured here:** more than one API worker, a database on separate hardware, Clerk token

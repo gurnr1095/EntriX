@@ -9,6 +9,11 @@ engine = create_async_engine(
     pool_size=get_settings().db_pool_size,
     max_overflow=get_settings().db_max_overflow,
     pool_timeout=60,
+    # A managed database may close idle connections (Neon suspends after 5 idle minutes) while
+    # this process stays up. Without this the first request afterwards picks up a dead pooled
+    # connection and crashes ("connection is closed"); with it the pool tests a connection
+    # before handing it out and quietly replaces a dead one.
+    pool_pre_ping=True,
 )
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 

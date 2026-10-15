@@ -145,6 +145,46 @@ UPDATE users SET role = 'admin' WHERE email = 'you@example.com';
 
 Use `organizer` for people who manage events and `volunteer` for people who scan QR codes.
 
+## 3b. Test a real sign-in (before there is a frontend)
+
+`tools/clerk_test/index.html` is a small development page: it signs you in with Clerk, shows your
+session token, checks that it carries the claims the API needs, and builds PowerShell commands so
+you can call the deployed API as yourself.
+
+```powershell
+python -m http.server 3000 --directory tools/clerk_test
+```
+Open http://localhost:3000, sign in, and read the checklist:
+
+- **email claim** must be a tick. If not, add the claims in Clerk (section 1) and sign in again.
+- **issuer** must be a tick. If it shows a different value, set `CLERK_ISSUER` on Render to
+  exactly the value in the token.
+
+Then press a "Copy" button and paste into PowerShell **within the minute** (Clerk session tokens are
+short-lived; the page refreshes them for you). `GET /me` should return your user with role
+`participant`. The page's publishable key (`pk_test_...`) is public by design; it is set at the top
+of the file. It does not call the API from the browser, because that needs CORS, which arrives with
+the real frontend.
+
+## 3c. Smoke-test the live API
+
+`scripts/smoke_test_deployed.py` walks one registration through its whole life on the real service
+(create and publish an event, add a category, register, replay the same request, try a duplicate,
+scan the QR twice, try to cancel after check-in, read the organizer stats and CSV, close the
+event), printing `[ OK ]` or `[FAIL]` for each of about 20 steps. Your user must be an `admin` or
+`organizer` (section 3).
+
+1. On the test page click **"Copy: Remember the token ..."** and paste it into PowerShell (it sets
+   `$t`). Do the next command within the minute:
+   ```powershell
+   $env:ENTRIX_TOKEN = $t
+   python -m scripts.smoke_test_deployed https://YOUR-SERVICE.onrender.com
+   ```
+2. Check your inbox (and spam) for **"You're in: Smoke Singles (SMOKE TEST ...)"**. That email
+   proves the whole chain on the live service: the registration, the worker inside the API, and
+   Brevo over HTTPS. The script cannot see your mailbox.
+3. It leaves one closed event named `SMOKE TEST <time>` behind (events have no delete endpoint).
+
 ## 4. Rate limiting behind Render (do this once)
 
 Render's proxy sits in front of the app, so the app must be told how many proxies to trust to
@@ -180,6 +220,7 @@ A free service that has been idle is asleep, and so is Neon.
 | `Brevo returned 400 ...` | Usually the sender: use exactly the address you verified in `MAIL_FROM`. After 8 tries a row is marked `failed` (kept in the `outbox` table with `last_error`). |
 | `401 missing_email_claim` | The Clerk session token has no `email` claim (section 1). |
 | Very slow first request | Cold start (Render about a minute, Neon a moment). See the checklist. |
+| `Internal Server Error` (a plain-text 500) right after a quiet spell | The database had closed idle connections (Neon suspends after 5 idle minutes) while the app stayed up. Fixed by `pool_pre_ping` (the pool tests a connection before using it); if you still see it, send the traceback from the Render logs. |
 | Emails never arrive | Check the logs for the lines above, then spam folders (section 1). |
 
 ## Backups
