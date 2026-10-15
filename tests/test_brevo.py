@@ -259,7 +259,7 @@ async def test_a_genuine_failure_still_counts_attempts_and_ends_in_failed(
 ) -> None:
     """Deferral is only for 'not now' errors; a real failure keeps the old behaviour."""
     await _three_pending_emails(client)
-    sender = _sender(lambda r: httpx.Response(400, json={"message": "invalid sender"}))
+    sender = _sender(lambda r: httpx.Response(400, json={"message": "invalid recipient address"}))
     for _ in range(3):
         async with engine.begin() as conn:
             await conn.execute(text("UPDATE outbox SET next_attempt_at = now()"))

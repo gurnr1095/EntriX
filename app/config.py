@@ -1,3 +1,5 @@
+import re
+from email.utils import parseaddr
 from functools import lru_cache
 from typing import Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -59,6 +61,26 @@ class Settings(BaseSettings):
     def _async_driver(cls, value: str) -> str:
         return normalise_database_url(value)
 
+    @field_validator("mail_from")
+    @classmethod
+    def _unquote_mail_from(cls, value: str) -> str:
+        """A value pasted into a hosting dashboard keeps the quotes it had in a .env file
+        (`MAIL_FROM="EntriX <a@b.co>"`); a .env parser strips them, a dashboard does not."""
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1].strip()
+        return value
+
+
+_EMAIL = re.compile(r"[^@\s<>\"',;]+@[^@\s<>\"',;]+\.[^@\s<>\"',;]+")
+
+
+def sender_address(mail_from: str) -> str | None:
+    """The bare email address inside MAIL_FROM ("Name <a@b.co>" or "a@b.co"), or None if it
+    does not contain a usable one (empty, stray quotes, ...)."""
+    address = parseaddr(mail_from)[1]
+    return address if _EMAIL.fullmatch(address) else None
+
 
 def normalise_database_url(url: str) -> str:
     """Turn a hosting provider's Postgres URL into one SQLAlchemy + asyncpg understand.
@@ -92,6 +114,12 @@ def validate_worker_startup(settings: Settings) -> None:
         raise RuntimeError("QR_SECRET must be set to a long random value when ENV=prod")
     if settings.email_backend == "brevo" and not settings.brevo_api_key:
         raise RuntimeError("EMAIL_BACKEND=brevo needs BREVO_API_KEY")
+    if sender_address(settings.mail_from) is None:
+        raise RuntimeError(
+            "MAIL_FROM must contain an email address, like  EntriX <you@example.com>  or "
+            f"you@example.com  (the sender you verified with your email provider); got "
+            f"{settings.mail_from!r}. When setting it in a hosting dashboard, do not add quotes."
+        )
 
 
 def validate_startup(settings: Settings) -> None:

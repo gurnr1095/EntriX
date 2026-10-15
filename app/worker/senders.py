@@ -7,7 +7,7 @@ from email.utils import parseaddr
 
 import httpx
 
-from app.config import get_settings
+from app.config import get_settings, sender_address
 
 log = logging.getLogger("outbox_worker")
 
@@ -51,7 +51,13 @@ class BrevoSender:
 
     @staticmethod
     def payload(msg: EmailMessage) -> dict[str, object]:
-        sender_name, sender_email = parseaddr(msg["From"])
+        sender_name, _ = parseaddr(msg["From"])
+        sender_email = sender_address(str(msg["From"]))
+        if sender_email is None:
+            raise DeferredError(
+                CONFIG_ERROR_DELAY,
+                f"MAIL_FROM has no usable email address ({msg['From']!r}): fix it and redeploy",
+            )
         _, to_email = parseaddr(msg["To"])
         text_part = msg.get_body(preferencelist=("plain",))
         html_part = msg.get_body(preferencelist=("html",))
@@ -92,6 +98,15 @@ class BrevoSender:
             raise DeferredError(
                 CONFIG_ERROR_DELAY,
                 f"Brevo refused our credentials ({status}): {response.text[:200]}",
+            )
+        if status == 400 and "sender" in response.text.lower():
+            # Every email would fail the same way, so this is configuration, not one bad email:
+            # wait for a fix instead of using up each row's attempts.
+            log.error("Brevo says the sender is invalid, check MAIL_FROM: %s", response.text[:200])
+            raise DeferredError(
+                CONFIG_ERROR_DELAY,
+                f"Brevo says the sender is not valid ({response.text[:200]}): check that "
+                "MAIL_FROM is an address verified in Brevo, without quotes",
             )
         raise RuntimeError(f"Brevo returned {status}: {response.text[:300]}")
 

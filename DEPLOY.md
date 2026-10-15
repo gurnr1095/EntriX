@@ -217,6 +217,7 @@ A free service that has been idle is asleep, and so is Neon.
 |---|---|
 | `outbox ... deferred ... quota` | Brevo's daily cap or rate limit. Nothing is lost; it retries. |
 | `Brevo rejected the API key ...` | Wrong or revoked `BREVO_API_KEY`. Fix it; queued emails then send. |
+| `Brevo ... valid sender email required` (or the app refusing to start with `MAIL_FROM must contain an email address`) | `MAIL_FROM` is empty or malformed. The classic cause: a value pasted into Render's dashboard **with quotes** (`"EntriX <you@x.com>"`). A `.env` file strips quotes, a dashboard does not, so it works locally and fails on Render. Set it to `EntriX <you@x.com>` or just the address, with no quotes. The app now strips stray quotes and refuses to start on an unusable value. To resend emails that already ran out of attempts, in Neon: `UPDATE outbox SET status = 'pending', attempts = 0, next_attempt_at = now() WHERE status = 'failed';` then redeploy (the worker sends on start-up). |
 | `Brevo returned 400 ...` | Usually the sender: use exactly the address you verified in `MAIL_FROM`. After 8 tries a row is marked `failed` (kept in the `outbox` table with `last_error`). |
 | `401 missing_email_claim` | The Clerk session token has no `email` claim (section 1). |
 | Very slow first request | Cold start (Render about a minute, Neon a moment). See the checklist. |

@@ -121,6 +121,10 @@ async def process_batch(
                 )
                 if msg is not None:
                     await asyncio.to_thread(send, msg)
+                    # Row id and type only: never the recipient's address in the logs.
+                    log.info("outbox %s sent (%s)", row.id, row.event_type)
+                else:
+                    log.info("outbox %s skipped (%s): nothing to send", row.id, row.event_type)
                 row.status = OutboxStatus.sent
                 row.sent_at = func.now()
             except DeferredError as exc:

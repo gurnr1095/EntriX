@@ -154,6 +154,12 @@ These are real; each was found by a test or a check, not by luck.
     addresses from the docs, and reported "sent". It now refuses both and says why, and the test suite
     ignores a developer's `.env` so a real key there cannot change test results.
 
+11. **One setting turned every email into a failure on Render only.** `MAIL_FROM="EntriX <a@b.co>"`
+    worked locally (a `.env` parser strips the quotes) and failed on Render (the dashboard keeps them),
+    so Brevo rejected every email with `valid sender email required`, and each row used its eight
+    attempts. Fixed in three layers: strip stray quotes, refuse to start on an unusable sender, and
+    treat "sender invalid" as configuration (retry later, keep the attempts) rather than a bad email.
+
 ## What would change at 100x
 - Browse traffic: read replicas, and the cache in front of them (already in place at small scale).
 - Hot category: split the seat counter into buckets, or hand out seats from Redis and reconcile.
