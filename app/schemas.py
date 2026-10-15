@@ -4,7 +4,13 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models import EventStatus, ParticipationType, RegistrationStatus, UserRole
+from app.models import (
+    EventStatus,
+    ParticipationType,
+    RegistrationStatus,
+    TeamStatus,
+    UserRole,
+)
 
 
 class ORMModel(BaseModel):
@@ -139,6 +145,73 @@ class RegistrationOut(BaseModel):
     registration_id: uuid.UUID
     status: RegistrationStatus
     waitlist_position: int | None = Field(default=None, description="Only when waitlisted")
+
+
+# ---- teams ----
+class TeamCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+class TeamJoin(BaseModel):
+    invite_code: str = Field(min_length=1)
+
+
+class TeamOut(BaseModel):
+    id: uuid.UUID
+    category_id: uuid.UUID
+    name: str
+    captain_id: uuid.UUID
+    status: TeamStatus
+    invite_code: str | None = Field(default=None, description="Captain and organizers only")
+
+
+class TeamMemberOut(BaseModel):
+    user_id: uuid.UUID
+    name: str
+    is_captain: bool
+
+
+class TeamDetail(TeamOut):
+    members: list[TeamMemberOut]
+
+
+# ---- organizer tools ----
+class ParticipantOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    college: str | None
+    roll_no: str | None
+    phone: str | None
+
+
+class RegistrationRow(BaseModel):
+    registration_id: uuid.UUID
+    status: RegistrationStatus
+    category_id: uuid.UUID
+    category_name: str
+    team_name: str | None
+    participant: ParticipantOut
+    created_at: datetime
+    waitlisted_at: datetime | None
+
+
+class RegistrationRowPage(BaseModel):
+    items: list[RegistrationRow]
+    next_cursor: str | None
+
+
+class CategoryStats(BaseModel):
+    id: uuid.UUID
+    name: str
+    capacity: int
+    confirmed: int
+    waitlisted: int
+    checked_in: int
+
+
+class EventStats(BaseModel):
+    categories: list[CategoryStats]
 
 
 class QrOut(BaseModel):

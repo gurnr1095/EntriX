@@ -132,3 +132,30 @@ async def open_category(client: httpx.AsyncClient) -> dict[str, Any]:
     """A published event with open registration and one category of capacity 50."""
     event = await make_event(client)
     return await make_category(client, event["id"], capacity=50)
+
+
+async def make_team_category(
+    client: httpx.AsyncClient,
+    event_id: str,
+    *,
+    capacity: int,
+    team_min: int = 2,
+    team_max: int = 3,
+    name: str = "Cricket",
+    waitlist_enabled: bool = True,
+) -> dict[str, Any]:
+    r = await client.post(
+        f"/events/{event_id}/categories",
+        json={
+            "name": name,
+            "sport": "cricket",
+            "participation": "team",
+            "team_size_min": team_min,
+            "team_size_max": team_max,
+            "capacity": capacity,
+            "waitlist_enabled": waitlist_enabled,
+        },
+        headers=ORGANIZER,
+    )
+    assert r.status_code == 201, r.text
+    return r.json()

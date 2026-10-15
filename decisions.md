@@ -146,3 +146,44 @@ uvicorn app.main:app --reload
 python -m app.worker.outbox_worker
 ```
 MailHog's inbox is at http://localhost:8025.
+
+## M4: Teams and organizer tools
+
+### 27. A team is one seat
+A team registers as a single registration owned by the captain (`user_id` = captain, `team_id` set), so the seat counter, waitlist, promotion, idempotency and cancellation code is shared with individuals (`place_registration`). Capacity counts teams, not people.
+Confirmation and promotion emails go to the captain only; members are not emailed in M4.
+
+### 28. Locking order: category, then team (and why it matters)
+Cancelling or registering a team locks the category row first, then the team row. Joining a team only ever locks the team row.
+A rule like "always take locks in the same order" is what prevents deadlocks: two transactions can only deadlock if one holds A and wants B while the other holds B and wants A.
+The roster is locked by the same mechanism: a join that was waiting on the team row re-reads it after the registration commits, sees `registered`, and is refused with `roster_locked`.
+`UNIQUE (category_id, user_id)` on `team_members` is the backstop for invariant 5, so even a missed lock could not put one person in two teams.
+
+### 29. Lifecycle rules
+- `forming`: people can join and leave. `registered`: roster locked (join and leave both refused), even while waitlisted. `cancelled`: members freed.
+- The captain cannot leave; they cancel the team instead.
+- Creating or joining a team needs a published event with the registration window open (my call, the spec is silent). Leaving and cancelling are always allowed.
+- Cancelling a team, or cancelling its registration directly, does the same thing: the registration is cancelled (seat transferred to the next waitlisted registration, or released), the team is marked cancelled, and its `team_members` rows are deleted.
+- Team size is checked at registration time: `team_size_min <= members <= team_size_max`.
+- Invite codes: 8 characters from an alphabet without 0/O/1/I, from `secrets` (not `random`), case-insensitive on join.
+- `GET /teams/{id}` (approved addition): members and organizers only; the invite code is shown to the captain and organizers only.
+
+### 30. Organizer tools
+- Registration list: filters `category_id` and `status`, cursor pagination on `(created_at, id)`. Organizer and admin only, because it contains personal data.
+- CSV: streamed from a server-side cursor in chunks of 500, so memory stays flat for large events (tested with 1,500 rows). It uses its own database session because the request's session is closed before the body finishes streaming.
+- CSV formula injection: a cell starting with `=`, `+`, `-` or `@` can run as a formula when opened in Excel or Sheets (a name like `=HYPERLINK(...)`), so such cells get a leading `'`. The JSON list is left untouched, since it is data and not a spreadsheet.
+- Stats: one grouped query, not one per category. `confirmed` is the seat counter (confirmed plus checked in), matching the spec's example; `checked_in` is the subset who arrived.
+
+### 31. Role checks
+`tests/test_roles.py` is a table of every endpoint against five identities (anonymous, participant, volunteer, organizer, admin): anonymous gets 401, wrong role gets 403, allowed roles never get 401 or 403.
+I checked that the table can fail by weakening one endpoint's check on purpose: exactly the two expected cases failed. Then I restored it.
+`X-Dev-Role` only applies when a user is first created; a test confirms it cannot promote an existing user.
+
+### 32. Bug log: the deadlock found by the join-vs-register race test
+`test_joins_racing_a_registration_leave_a_consistent_roster` failed with `deadlock detected`, in the exact situation the lock ordering was meant to prevent.
+**Cause:** inserting a `team_members` row makes Postgres take a `FOR KEY SHARE` lock on the referenced `categories` row, to make sure the category cannot be deleted mid-insert. The category lock I used was a full `FOR UPDATE`, which conflicts with that. So a join held the team and waited on the category, while the registration held the category and waited on the team.
+**Fix:** use `FOR NO KEY UPDATE` for the category and team locks. It still conflicts with itself and with `UPDATE`, so seat claims, cancellations and capacity changes are still serialized; it just does not conflict with foreign-key checks.
+The race test now passes 15 repeated runs. This is a strong answer to "hardest bug you hit": a lock-ordering argument that looked right on paper but missed a lock Postgres takes implicitly.
+
+### 33. Lint setting
+Tests are exempt from the line-length rule (long SQL strings and assertions read better unwrapped). App code is still held to 100 columns.

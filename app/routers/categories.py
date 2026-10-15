@@ -1,15 +1,13 @@
-import json
 import uuid
 
 from fastapi import APIRouter, Depends, Header, Request, Response
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.deps import CurrentUser, get_current_user, require_organizer
 from app.errors import AppError
-from app.models import Category
+from app.routers.common import stored_json_response
 from app.routers.events import category_out
 from app.schemas import CategoryOut, CategoryPatch, RegistrationOut
 from app.services import idempotency, registration_service
@@ -27,14 +25,7 @@ async def patch_category(
     try:
         async with session.begin():
             # Same lock as seat claims and cancellations (CLAUDE.md rule).
-            category = await session.scalar(
-                select(Category)
-                .where(Category.id == category_id)
-                .with_for_update()
-                .execution_options(populate_existing=True)
-            )
-            if category is None:
-                raise AppError(404, "not_found", "Category not found")
+            category = await registration_service.lock_category(session, category_id)
             changes = body.model_dump(exclude_unset=True)
             for field in ("name", "sport", "capacity", "waitlist_enabled"):
                 if field in changes and changes[field] is None:
@@ -85,10 +76,4 @@ async def register(
         path=path,
         request_hash=idempotency.hash_request(method, path, await request.body()),
     )
-    # jsonb does not preserve key order, so serialize with sorted keys: a fresh response
-    # and a replay are then byte-identical.
-    return Response(
-        content=json.dumps(body, sort_keys=True, separators=(",", ":")),
-        status_code=status,
-        media_type="application/json",
-    )
+    return stored_json_response(status, body)
