@@ -1,11 +1,20 @@
 import re
-from email.utils import parseaddr
+from email.utils import formataddr, parseaddr
 from functools import lru_cache
 from typing import Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_EMAIL = re.compile(r"[^@\s<>\"',;]+@[^@\s<>\"',;]+\.[^@\s<>\"',;]+")
+
+
+def sender_address(mail_from: str) -> str | None:
+    """The bare email address inside MAIL_FROM ("Name <a@b.co>" or "a@b.co"), or None if it
+    does not contain a usable one (empty, stray quotes, a missing <...>)."""
+    address = parseaddr(mail_from)[1]
+    return address if _EMAIL.fullmatch(address) else None
 
 
 class Settings(BaseSettings):
@@ -43,6 +52,9 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_starttls: bool = False
     mail_from: str = "no-reply@sportreg.local"
+    # The name recipients see ("EntriX"). Kept separate so MAIL_FROM can be a plain address:
+    # `Name <address>` is easy to mistype in a hosting dashboard.
+    mail_from_name: str = ""
     outbox_poll_seconds: float = 2
     # Longest the worker sleeps when nothing is due. Small for a dedicated worker; a free-tier
     # deployment sets it high so an idle database can suspend (a new registration wakes the
@@ -61,7 +73,7 @@ class Settings(BaseSettings):
     def _async_driver(cls, value: str) -> str:
         return normalise_database_url(value)
 
-    @field_validator("mail_from")
+    @field_validator("mail_from", "mail_from_name")
     @classmethod
     def _unquote_mail_from(cls, value: str) -> str:
         """A value pasted into a hosting dashboard keeps the quotes it had in a .env file
@@ -71,15 +83,16 @@ class Settings(BaseSettings):
             value = value[1:-1].strip()
         return value
 
+    def sender_header(self) -> str:
+        """The value for the From header: `Name <address>`, or just the address.
 
-_EMAIL = re.compile(r"[^@\s<>\"',;]+@[^@\s<>\"',;]+\.[^@\s<>\"',;]+")
-
-
-def sender_address(mail_from: str) -> str | None:
-    """The bare email address inside MAIL_FROM ("Name <a@b.co>" or "a@b.co"), or None if it
-    does not contain a usable one (empty, stray quotes, ...)."""
-    address = parseaddr(mail_from)[1]
-    return address if _EMAIL.fullmatch(address) else None
+        MAIL_FROM_NAME wins over a name written inside MAIL_FROM.
+        """
+        address = sender_address(self.mail_from)
+        if address is None:
+            return self.mail_from  # validate_worker_startup reports this clearly
+        name = self.mail_from_name or parseaddr(self.mail_from)[0]
+        return formataddr((name, address)) if name else address
 
 
 def normalise_database_url(url: str) -> str:
@@ -116,9 +129,10 @@ def validate_worker_startup(settings: Settings) -> None:
         raise RuntimeError("EMAIL_BACKEND=brevo needs BREVO_API_KEY")
     if sender_address(settings.mail_from) is None:
         raise RuntimeError(
-            "MAIL_FROM must contain an email address, like  EntriX <you@example.com>  or "
-            f"you@example.com  (the sender you verified with your email provider); got "
-            f"{settings.mail_from!r}. When setting it in a hosting dashboard, do not add quotes."
+            "MAIL_FROM must contain an email address: use just the address you verified with "
+            "your email provider, e.g.  you@example.com  (put the display name in "
+            f"MAIL_FROM_NAME). Got {settings.mail_from!r}. In a hosting dashboard, do not add "
+            "quotes, and a  Name <address>  form needs its angle brackets."
         )
 
 

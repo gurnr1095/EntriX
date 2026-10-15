@@ -124,7 +124,9 @@ If it ever changes, QR codes already emailed stop verifying.
    | `DATABASE_URL` | the Neon **direct** connection string |
    | `QR_SECRET` | the secret above |
    | `CLERK_ISSUER`, `CLERK_JWKS_URL` | from Clerk |
-   | `BREVO_API_KEY`, `MAIL_FROM` | from Brevo |
+   | `BREVO_API_KEY` | from Brevo |
+   | `MAIL_FROM` | the **plain** address you verified in Brevo, e.g. `you@gmail.com`: no quotes, no `<>`, no name |
+   | `MAIL_FROM_NAME` | the name recipients see, e.g. `EntriX` (the Blueprint already sets it) |
    | `TRUSTED_PROXY_HOPS` | `1` to start, then check (section 4) |
 
 3. Watch the first deploy's logs. You should see Alembic apply the migration
@@ -217,7 +219,7 @@ A free service that has been idle is asleep, and so is Neon.
 |---|---|
 | `outbox ... deferred ... quota` | Brevo's daily cap or rate limit. Nothing is lost; it retries. |
 | `Brevo rejected the API key ...` | Wrong or revoked `BREVO_API_KEY`. Fix it; queued emails then send. |
-| `Brevo ... valid sender email required` (or the app refusing to start with `MAIL_FROM must contain an email address`) | `MAIL_FROM` is empty or malformed. The classic cause: a value pasted into Render's dashboard **with quotes** (`"EntriX <you@x.com>"`). A `.env` file strips quotes, a dashboard does not, so it works locally and fails on Render. Set it to `EntriX <you@x.com>` or just the address, with no quotes. The app now strips stray quotes and refuses to start on an unusable value. To resend emails that already ran out of attempts, in Neon: `UPDATE outbox SET status = 'pending', attempts = 0, next_attempt_at = now() WHERE status = 'failed';` then redeploy (the worker sends on start-up). |
+| `Brevo ... valid sender email required`, or the app refusing to start with `MAIL_FROM must contain an email address` | `MAIL_FROM` is empty or is not an address. This happened on the first deploy: Render held `EntriX grkr1095@gmail.com`, so the `<angle brackets>` of `Name <address>` had been lost and there was no address. Set `MAIL_FROM` to the plain address only (`you@gmail.com`) and put the name in `MAIL_FROM_NAME`. The app refuses to start on an unusable value and prints what it received. To resend emails that already used up their attempts, in Neon (in a cleared editor): `UPDATE outbox SET status = 'pending', attempts = 0, next_attempt_at = now() WHERE status = 'failed';` then redeploy. |
 | `Brevo returned 400 ...` | Usually the sender: use exactly the address you verified in `MAIL_FROM`. After 8 tries a row is marked `failed` (kept in the `outbox` table with `last_error`). |
 | `401 missing_email_claim` | The Clerk session token has no `email` claim (section 1). |
 | Very slow first request | Cold start (Render about a minute, Neon a moment). See the checklist. |

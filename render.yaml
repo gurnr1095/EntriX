@@ -51,8 +51,12 @@ services:
         value: brevo
       - key: BREVO_API_KEY # a Brevo API key (not the SMTP key). Never commit it.
         sync: false
-      - key: MAIL_FROM # the sender address you verified in Brevo
+      # The address you verified in Brevo: PLAIN, e.g. you@gmail.com. No quotes, no <angle
+      # brackets>, no name (a value like  EntriX <you@gmail.com>  is easy to mistype here).
+      - key: MAIL_FROM
         sync: false
+      - key: MAIL_FROM_NAME # the name recipients see
+        value: EntriX
       # No REDIS_URL on purpose: in-memory rate limiting and cache, which is correct for the
       # single process below. (More than one worker process would give each its own counters.)
       - key: WEB_CONCURRENCY

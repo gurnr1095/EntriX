@@ -154,11 +154,12 @@ These are real; each was found by a test or a check, not by luck.
     addresses from the docs, and reported "sent". It now refuses both and says why, and the test suite
     ignores a developer's `.env` so a real key there cannot change test results.
 
-11. **One setting turned every email into a failure on Render only.** `MAIL_FROM="EntriX <a@b.co>"`
-    worked locally (a `.env` parser strips the quotes) and failed on Render (the dashboard keeps them),
-    so Brevo rejected every email with `valid sender email required`, and each row used its eight
-    attempts. Fixed in three layers: strip stray quotes, refuse to start on an unusable sender, and
-    treat "sender invalid" as configuration (retry later, keep the attempts) rather than a bad email.
+11. **One setting turned every email into a failure on Render only.** `MAIL_FROM` in Render's dashboard
+    was `EntriX grkr1095@gmail.com`: the `<angle brackets>` of `Name <address>` were lost, so Brevo got no
+    valid sender and rejected every email (`valid sender email required`); each row used its eight attempts.
+    My first guess (stray quotes) was wrong; the start-up validation added in response printed the real
+    value. Fixes: refuse to start on an unusable sender, treat "sender invalid" as configuration (retry
+    later, keep the attempts), and let `MAIL_FROM` be a plain address with the name in `MAIL_FROM_NAME`.
 
 ## What would change at 100x
 - Browse traffic: read replicas, and the cache in front of them (already in place at small scale).

@@ -34,6 +34,7 @@ os.environ.update(
         "EMAIL_BACKEND": "smtp",
         "BREVO_API_KEY": "",
         "MAIL_FROM": "no-reply@sportreg.local",
+        "MAIL_FROM_NAME": "",
         "SMTP_HOST": "localhost",
         "SMTP_PORT": "1025",
         "SMTP_USER": "",

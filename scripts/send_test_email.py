@@ -47,7 +47,7 @@ def send_test_emails(
             token=qr.sign(uuid.uuid4(), uuid.uuid4()),
         )
         message = build_message(
-            "registration_confirmed", ctx, number, settings.mail_from, inline_qr=inline
+            "registration_confirmed", ctx, number, settings.sender_header(), inline_qr=inline
         )
         assert message is not None
         message.replace_header("Subject", f"[EntriX test] {message['Subject']}")
@@ -90,7 +90,7 @@ def main(argv: Sequence[str]) -> int:
 
     settings = get_settings()
     validate_worker_startup(settings)
-    print(f"backend={settings.email_backend} from={settings.mail_from}")
+    print(f"backend={settings.email_backend} from={settings.sender_header()}")
     local = settings.email_backend == "smtp" and settings.smtp_host in LOCAL_SMTP_HOSTS
     if local and not allow_local:
         print(

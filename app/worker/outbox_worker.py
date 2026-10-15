@@ -117,7 +117,7 @@ async def process_batch(
             try:
                 ctx = await _load_context(session, row)
                 msg = build_message(
-                    row.event_type, ctx, row.id, settings.mail_from, inline_qr=inline_qr
+                    row.event_type, ctx, row.id, settings.sender_header(), inline_qr=inline_qr
                 )
                 if msg is not None:
                     await asyncio.to_thread(send, msg)
