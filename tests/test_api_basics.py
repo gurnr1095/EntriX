@@ -11,9 +11,12 @@ from tests.conftest import ORGANIZER, as_user, idem, iso, make_category, make_ev
 def test_prod_refuses_dev_auth() -> None:
     with pytest.raises(RuntimeError):
         validate_startup(Settings(env="prod", auth_mode="dev"))
+    clerk = {"clerk_jwks_url": "https://c.example/.well-known/jwks.json", "clerk_issuer": "https://c.example"}
     with pytest.raises(RuntimeError):  # prod also refuses the placeholder QR secret
-        validate_startup(Settings(env="prod", auth_mode="clerk"))
-    validate_startup(Settings(env="prod", auth_mode="clerk", qr_secret="x" * 48))
+        validate_startup(Settings(env="prod", auth_mode="clerk", **clerk))
+    with pytest.raises(RuntimeError):  # clerk mode needs to know where the keys are
+        validate_startup(Settings(env="prod", auth_mode="clerk", qr_secret="x" * 48))
+    validate_startup(Settings(env="prod", auth_mode="clerk", qr_secret="x" * 48, **clerk))
 
 
 async def test_healthz(client: httpx.AsyncClient) -> None:
@@ -114,3 +117,12 @@ async def test_category_capacity_rules_and_seats_left(client: httpx.AsyncClient)
         headers=ORGANIZER,
     )
     assert dup.status_code == 409
+
+
+def test_worker_refuses_placeholder_qr_secret_in_prod() -> None:
+    from app.config import validate_worker_startup
+
+    with pytest.raises(RuntimeError):
+        validate_worker_startup(Settings(env="prod"))
+    validate_worker_startup(Settings(env="prod", qr_secret="y" * 48))
+    validate_worker_startup(Settings(env="dev"))  # the placeholder is fine locally

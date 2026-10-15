@@ -15,6 +15,13 @@ TEST_DATABASE_URL = os.environ.get(
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["ENV"] = "dev"
 os.environ["AUTH_MODE"] = "dev"
+os.environ["REDIS_URL"] = ""  # in-memory rate limiting and cache (SPEC 5: tests use memory)
+# Tests fire hundreds of requests from one fake client; the limiter has its own tests that
+# lower these on purpose.
+os.environ["RATE_LIMIT_USER_PER_MIN"] = "1000000"
+os.environ["RATE_LIMIT_IP_PER_MIN"] = "1000000"
+os.environ["RATE_LIMIT_CHECKIN_PER_MIN"] = "1000000"
+os.environ["CACHE_ENABLED"] = "false"  # cache tests switch it on explicitly
 
 import httpx  # noqa: E402
 import pytest_asyncio  # noqa: E402
@@ -22,6 +29,7 @@ from sqlalchemy import text  # noqa: E402
 
 from app.db import engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.services import cache, rate_limit  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 TABLES = (
@@ -48,6 +56,8 @@ async def _schema() -> AsyncIterator[None]:
 
 @pytest_asyncio.fixture(autouse=True)
 async def _clean(_schema: None) -> None:
+    rate_limit.reset_for_tests()
+    cache.reset_for_tests()
     async with engine.begin() as conn:
         await conn.execute(text(f"TRUNCATE {TABLES} RESTART IDENTITY CASCADE"))
 

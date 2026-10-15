@@ -1,0 +1,11 @@
+invariant 1_confirmed_count_matches_registrations: OK
+invariant 2_confirmed_count_within_capacity: OK
+invariant 3_waitlist_implies_full: OK
+invariant 4_one_active_registration_per_user_per_category: OK
+invariant 5_one_team_per_user_per_category: OK
+registrations_by_status: [["confirmed", "500"], ["waitlisted", "1761"]]
+categories_over_capacity: [["0"]]
+hot_categories: [["Table Tennis", "500", "500", "500", "1761"]]
+outbox_by_status: [["sent", "2261"]]
+users: [["2262"]]
+RESULT: ALL INVARIANTS HOLD

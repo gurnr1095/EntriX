@@ -3,7 +3,7 @@ import json
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,8 +21,16 @@ from app.schemas import (
     EventPage,
     EventPatch,
 )
+from app.services import cache
 
 router = APIRouter(tags=["events"])
+
+
+def _cached_json(body: str, *, hit: bool) -> Response:
+    """Browse responses say whether they came from the cache (handy for tests and load tests)."""
+    return Response(
+        content=body, media_type="application/json", headers={"X-Cache": "HIT" if hit else "MISS"}
+    )
 
 # draft -> published -> closed, one step at a time
 _NEXT_STATUS = {
@@ -83,7 +91,10 @@ async def list_events(
     limit: int = Query(default=50, ge=1, le=100),
     cursor: str | None = None,
     session: AsyncSession = Depends(get_session),
-) -> EventPage:
+) -> Response:
+    key = cache.event_list_key(limit, cursor)
+    if (cached := await cache.cache_get(key)) is not None:
+        return _cached_json(cached, hit=True)
     stmt = select(Event).where(Event.status == EventStatus.published)
     if cursor:
         starts_at, event_id = decode_cursor(cursor)
@@ -96,13 +107,20 @@ async def list_events(
     rows = (await session.scalars(stmt.order_by(Event.starts_at, Event.id).limit(limit + 1))).all()
     page = rows[:limit]
     next_cursor = encode_cursor(page[-1].starts_at, page[-1].id) if len(rows) > limit else None
-    return EventPage(items=[EventOut.model_validate(e) for e in page], next_cursor=next_cursor)
+    body = EventPage(
+        items=[EventOut.model_validate(e) for e in page], next_cursor=next_cursor
+    ).model_dump_json()
+    await cache.cache_set(key, body)  # the list refreshes by TTL only, no invalidation
+    return _cached_json(body, hit=False)
 
 
 @router.get("/events/{event_id}", response_model=EventDetail)
 async def get_event(
     event_id: uuid.UUID, session: AsyncSession = Depends(get_session)
-) -> EventDetail:
+) -> Response:
+    key = cache.event_key(event_id)
+    if (cached := await cache.cache_get(key)) is not None:
+        return _cached_json(cached, hit=True)
     event = await session.get(Event, event_id)
     if event is None or event.status == EventStatus.draft:
         raise AppError(404, "not_found", "Event not found")
@@ -111,10 +129,14 @@ async def get_event(
             select(Category).where(Category.event_id == event_id).order_by(Category.name)
         )
     ).all()
-    return EventDetail(
+    body = EventDetail(
         **EventOut.model_validate(event).model_dump(),
         categories=[category_out(c) for c in categories],
-    )
+    ).model_dump_json()
+    # Only successful reads are cached (404s never are). seats_left may lag by up to the TTL;
+    # registration itself always goes to the database, so this cannot cause overbooking.
+    await cache.cache_set(key, body)
+    return _cached_json(body, hit=False)
 
 
 @router.patch("/events/{event_id}", response_model=EventOut)
@@ -149,6 +171,7 @@ async def patch_event(
                     f"Cannot move event from {event.status.value} to {new_status.value}",
                 )
             event.status = new_status
+    await cache.cache_delete(cache.event_key(event_id))
     return event
 
 
@@ -171,4 +194,5 @@ async def create_category(
         if "categories_event_id_name_key" in str(exc.orig):
             raise AppError(409, "category_name_taken", "Category name already used") from exc
         raise
+    await cache.cache_delete(cache.event_key(event_id))
     return category_out(category)

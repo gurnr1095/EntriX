@@ -12,6 +12,8 @@ dependencies = [
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
     "segno>=1.6",
+    "redis>=5.0",
+    "pyjwt[crypto]>=2.8",
 ]
 
 [project.optional-dependencies]
@@ -21,9 +23,12 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.5",
 ]
+loadtest = [
+    "locust>=2.29",
+]
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.ruff]
 line-length = 100
@@ -34,6 +39,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]  # long SQL strings and assertions read better unwrapped
+"loadtests/summarize.py" = ["E501"]  # a report template: mostly long prose strings
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]

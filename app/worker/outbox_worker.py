@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import smtplib
+import ssl
 import uuid
 from collections.abc import Callable
 from datetime import timedelta
@@ -11,7 +12,7 @@ from email.message import EmailMessage
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.config import get_settings
+from app.config import get_settings, validate_worker_startup
 from app.db import SessionLocal
 from app.models import Category, Event, Outbox, OutboxStatus, Registration, User
 from app.services import qr
@@ -32,6 +33,10 @@ def backoff_seconds(attempts: int) -> int:
 def smtp_send(msg: EmailMessage) -> None:
     settings = get_settings()
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
+        if settings.smtp_starttls:  # encrypt before any credentials are sent (port 587)
+            smtp.starttls(context=ssl.create_default_context())
+        if settings.smtp_user:
+            smtp.login(settings.smtp_user, settings.smtp_password)
         smtp.send_message(msg)
 
 
@@ -107,6 +112,7 @@ async def process_batch(
 
 async def run_forever() -> None:
     settings = get_settings()
+    validate_worker_startup(settings)
     log.info("outbox worker started (poll every %ss)", settings.outbox_poll_seconds)
     while True:
         picked = await process_batch()

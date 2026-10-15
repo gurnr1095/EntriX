@@ -187,3 +187,44 @@ The race test now passes 15 repeated runs. This is a strong answer to "hardest b
 
 ### 33. Lint setting
 Tests are exempt from the line-length rule (long SQL strings and assertions read better unwrapped). App code is still held to 100 columns.
+
+## M5: Hardening and proof
+
+### 34. Rate limiting
+Redis sorted set per key (per user, per IP), one Lua script per check: drop old hits, count, then refuse or record. A script is atomic in Redis, so two API processes cannot both see "9 of 10" and both let a request through (tested with 100 racing hits through two limiter objects: exactly 10 allowed). The script uses the Redis server's clock so every API instance agrees on "now".
+Limits are the spec's (10/min per user and 60/min per IP on registration, 120/min per volunteer on check-in), all environment variables. Over the limit gives `429` with `Retry-After`.
+- **Fails open.** If Redis is unreachable the request goes through and an error is logged. A cache outage must not stop people registering.
+- **Refused requests still count**, so hammering a refused endpoint does not pay off.
+- **Idempotent replays count too**: a retry is still a request.
+- Tests use an in-memory limiter (as the spec says); the Redis version is tested separately against a real Redis.
+
+### 35. Which client IP?
+Behind a reverse proxy the socket address is the proxy's, so every visitor would share one 60/min limit. `TRUSTED_PROXY_HOPS=N` takes the Nth entry **from the right** of `X-Forwarded-For`: the left side is written by the client and can be forged (tested: rotating a fake left entry does not escape the limit). `0` ignores the header.
+I could not verify how many proxies Render puts in front of the app, so the number is a setting you confirm after deploying (the app logs the resolved IP and the raw header whenever it rate limits, and warns at start-up in production if the value is 0).
+
+### 36. Caching
+`GET /events/{id}` and `GET /events` are cached for 3 seconds in Redis. Only successful reads are cached (a 404 never is, so publishing an event shows up at once). Organizer edits to an event or its categories delete the detail entry; the list refreshes by TTL only.
+**Trade-off:** `seats_left` on a browse page can lag by up to 3 seconds. Registration never reads the cache, so this cannot cause overbooking (tested: a stale page says one seat is left, the booking path still answers `category_full`).
+Responses carry `X-Cache: HIT|MISS`, and a test counts SQL statements to prove a hit sends none. `CACHE_ENABLED=false` switches it off, which the load test uses for the with/without comparison.
+
+### 37. Clerk sign-in
+RS256 only (the token's own `alg` header is never trusted), issuer checked, `exp`/`iat`/`sub` required, 10 seconds of clock leeway. Keys come from Clerk's JWKS and are cached by the library; the blocking fetch runs in a thread.
+Roles are never read from the token. A new user is a `participant`; an admin promotes people with SQL (DEPLOY.md). Dev headers are ignored entirely in Clerk mode. Clerk being unreachable is `503`, not `401`, so clients do not think a valid session is bad.
+Tests use a locally generated RSA key and a JWKS stub, including the classic attacks (HS256 signed with the public key, `alg: none`, wrong issuer, expired, wrong signer). I weakened the issuer check on purpose to confirm the test notices.
+Clerk's default token has no email, so the project needs a custom claim (DEPLOY.md); without it the API explains exactly what to fix.
+
+### 38. Production wiring
+- `Dockerfile`: slim Python image, non-root user, installs only runtime dependencies. `$PORT` is honoured (Render sets it) and `WEB_CONCURRENCY` sets uvicorn workers.
+- `docker-compose.yml`: postgres, redis, mailhog, a one-shot `migrate` job, the api and the worker, with healthchecks; knobs (cache, limits, pool, workers) are overridable from the shell. The old "just the backing services" command still works.
+- `render.yaml`: database, Key Value store, web service (runs `alembic upgrade head` before each deploy) and worker. `QR_SECRET` must be identical on the API and the worker, so it is prompted for on both (I could not confirm that Render can share one generated value across services).
+- `DATABASE_URL`: hosting platforms hand out `postgres://` URLs; the app converts them to the async driver.
+- Real email needs authentication and TLS: `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_STARTTLS` (port 587). Credentials are only sent after TLS is on (tested).
+- The worker has its own start-up check so it cannot run in production with the placeholder QR secret.
+- Connection pools are per process: processes x (pool + overflow) must stay under Postgres's 100 connections, so pool size is a setting now.
+
+### 39. CI
+Postgres 16 and Redis 7 as services; `alembic upgrade head` on an empty database, `ruff check`, `pytest`; Python 3.12 and 3.13. The Redis tests skip locally when Redis is down but **fail** in CI (`REQUIRE_REDIS=1`), so they cannot silently stop running there. I could only run 3.13 locally, so 3.12 is untested until the first CI run.
+
+### 40. Load test method
+Every number in `LOADTEST.md` is generated by `loadtests/summarize.py` from Locust's CSV files; none is typed. The runner resets the database and Redis, restarts the API in a known configuration, seeds data, runs Locust, then checks the five invariants against the database.
+The first trial caught a real flaw in the test itself (browse traffic started before the seed finished and silently produced exceptions instead of requests), which is why seeding is now a separate step. Limits are in the file itself: one laptop running everything including the load generator, dev auth, one run per configuration.

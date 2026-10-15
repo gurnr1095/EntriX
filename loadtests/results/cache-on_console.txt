@@ -1,0 +1,141 @@
+seeded 10 events; hot category eac80064-540c-4a5a-b1b8-bddc06e0d699
+[2026-10-16 01:01:45,945] Gurnoors-Laptop/INFO/locust.main: Starting Locust 2.46.7
+[2026-10-16 01:01:45,948] Gurnoors-Laptop/INFO/locust.runners: Shape test starting.
+[2026-10-16 01:01:45,949] Gurnoors-Laptop/INFO/locust.runners: Shape worker starting
+[2026-10-16 01:01:45,949] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 1 users at 10.00 spawn rate
+[2026-10-16 01:01:45,949] Gurnoors-Laptop/INFO/locust.runners: Ramping to 1 users at a rate of 10.00 per second
+[2026-10-16 01:01:45,950] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 1, "Launch": 0} (1 total users)
+[2026-10-16 01:01:46,954] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 11 users at 10.00 spawn rate
+[2026-10-16 01:01:46,955] Gurnoors-Laptop/INFO/locust.runners: Ramping to 11 users at a rate of 10.00 per second
+[2026-10-16 01:01:46,959] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 9, "Launch": 2} (11 total users)
+[2026-10-16 01:01:47,968] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 21 users at 10.00 spawn rate
+[2026-10-16 01:01:47,970] Gurnoors-Laptop/INFO/locust.runners: Ramping to 21 users at a rate of 10.00 per second
+[2026-10-16 01:01:47,972] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 17, "Launch": 4} (21 total users)
+[2026-10-16 01:01:48,968] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 31 users at 10.00 spawn rate
+[2026-10-16 01:01:48,969] Gurnoors-Laptop/INFO/locust.runners: Ramping to 31 users at a rate of 10.00 per second
+[2026-10-16 01:01:48,970] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 25, "Launch": 6} (31 total users)
+[2026-10-16 01:01:49,970] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 41 users at 10.00 spawn rate
+[2026-10-16 01:01:49,973] Gurnoors-Laptop/INFO/locust.runners: Ramping to 41 users at a rate of 10.00 per second
+[2026-10-16 01:01:49,975] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 33, "Launch": 8} (41 total users)
+[2026-10-16 01:01:50,980] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 51 users at 10.00 spawn rate
+[2026-10-16 01:01:50,980] Gurnoors-Laptop/INFO/locust.runners: Ramping to 51 users at a rate of 10.00 per second
+[2026-10-16 01:01:50,982] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 41, "Launch": 10} (51 total users)
+[2026-10-16 01:01:51,982] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 61 users at 10.00 spawn rate
+[2026-10-16 01:01:51,982] Gurnoors-Laptop/INFO/locust.runners: Ramping to 61 users at a rate of 10.00 per second
+[2026-10-16 01:01:51,985] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 49, "Launch": 12} (61 total users)
+[2026-10-16 01:01:52,987] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 71 users at 10.00 spawn rate
+[2026-10-16 01:01:52,988] Gurnoors-Laptop/INFO/locust.runners: Ramping to 71 users at a rate of 10.00 per second
+[2026-10-16 01:01:52,990] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 57, "Launch": 14} (71 total users)
+[2026-10-16 01:01:53,987] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 81 users at 10.00 spawn rate
+[2026-10-16 01:01:53,988] Gurnoors-Laptop/INFO/locust.runners: Ramping to 81 users at a rate of 10.00 per second
+[2026-10-16 01:01:53,991] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 65, "Launch": 16} (81 total users)
+[2026-10-16 01:01:54,994] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 91 users at 10.00 spawn rate
+[2026-10-16 01:01:54,995] Gurnoors-Laptop/INFO/locust.runners: Ramping to 91 users at a rate of 10.00 per second
+[2026-10-16 01:01:54,998] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 73, "Launch": 18} (91 total users)
+[2026-10-16 01:01:56,007] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 101 users at 10.00 spawn rate
+[2026-10-16 01:01:56,009] Gurnoors-Laptop/INFO/locust.runners: Ramping to 101 users at a rate of 10.00 per second
+[2026-10-16 01:01:56,013] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 81, "Launch": 20} (101 total users)
+[2026-10-16 01:01:57,021] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 111 users at 10.00 spawn rate
+[2026-10-16 01:01:57,022] Gurnoors-Laptop/INFO/locust.runners: Ramping to 111 users at a rate of 10.00 per second
+[2026-10-16 01:01:57,025] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 89, "Launch": 22} (111 total users)
+[2026-10-16 01:01:58,033] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 121 users at 10.00 spawn rate
+[2026-10-16 01:01:58,038] Gurnoors-Laptop/INFO/locust.runners: Ramping to 121 users at a rate of 10.00 per second
+[2026-10-16 01:01:58,040] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 97, "Launch": 24} (121 total users)
+[2026-10-16 01:01:59,033] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 131 users at 10.00 spawn rate
+[2026-10-16 01:01:59,034] Gurnoors-Laptop/INFO/locust.runners: Ramping to 131 users at a rate of 10.00 per second
+[2026-10-16 01:01:59,035] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 105, "Launch": 26} (131 total users)
+[2026-10-16 01:02:00,034] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 141 users at 10.00 spawn rate
+[2026-10-16 01:02:00,035] Gurnoors-Laptop/INFO/locust.runners: Ramping to 141 users at a rate of 10.00 per second
+[2026-10-16 01:02:00,037] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 113, "Launch": 28} (141 total users)
+[2026-10-16 01:02:01,036] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 151 users at 10.00 spawn rate
+[2026-10-16 01:02:01,036] Gurnoors-Laptop/INFO/locust.runners: Ramping to 151 users at a rate of 10.00 per second
+[2026-10-16 01:02:01,039] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 121, "Launch": 30} (151 total users)
+[2026-10-16 01:02:02,041] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 161 users at 10.00 spawn rate
+[2026-10-16 01:02:02,042] Gurnoors-Laptop/INFO/locust.runners: Ramping to 161 users at a rate of 10.00 per second
+[2026-10-16 01:02:02,044] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 129, "Launch": 32} (161 total users)
+[2026-10-16 01:02:03,041] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 171 users at 10.00 spawn rate
+[2026-10-16 01:02:03,042] Gurnoors-Laptop/INFO/locust.runners: Ramping to 171 users at a rate of 10.00 per second
+[2026-10-16 01:02:03,044] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 137, "Launch": 34} (171 total users)
+[2026-10-16 01:02:04,041] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 181 users at 10.00 spawn rate
+[2026-10-16 01:02:04,042] Gurnoors-Laptop/INFO/locust.runners: Ramping to 181 users at a rate of 10.00 per second
+[2026-10-16 01:02:04,047] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 145, "Launch": 36} (181 total users)
+[2026-10-16 01:02:05,044] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 191 users at 10.00 spawn rate
+[2026-10-16 01:02:05,046] Gurnoors-Laptop/INFO/locust.runners: Ramping to 191 users at a rate of 10.00 per second
+[2026-10-16 01:02:05,051] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 153, "Launch": 38} (191 total users)
+[2026-10-16 01:02:06,045] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 201 users at 10.00 spawn rate
+[2026-10-16 01:02:06,045] Gurnoors-Laptop/INFO/locust.runners: Ramping to 201 users at a rate of 10.00 per second
+[2026-10-16 01:02:06,048] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 161, "Launch": 40} (201 total users)
+[2026-10-16 01:02:07,048] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 211 users at 10.00 spawn rate
+[2026-10-16 01:02:07,050] Gurnoors-Laptop/INFO/locust.runners: Ramping to 211 users at a rate of 10.00 per second
+[2026-10-16 01:02:07,053] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 169, "Launch": 42} (211 total users)
+[2026-10-16 01:02:08,051] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 222 users at 10.00 spawn rate
+[2026-10-16 01:02:08,055] Gurnoors-Laptop/INFO/locust.runners: Ramping to 222 users at a rate of 10.00 per second
+[2026-10-16 01:02:09,055] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 232 users at 10.00 spawn rate
+[2026-10-16 01:02:09,058] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 178, "Launch": 44} (222 total users)
+[2026-10-16 01:02:09,061] Gurnoors-Laptop/INFO/locust.runners: Ramping to 232 users at a rate of 10.00 per second
+[2026-10-16 01:02:09,064] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 186, "Launch": 46} (232 total users)
+[2026-10-16 01:02:10,061] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 242 users at 10.00 spawn rate
+[2026-10-16 01:02:10,063] Gurnoors-Laptop/INFO/locust.runners: Ramping to 242 users at a rate of 10.00 per second
+[2026-10-16 01:02:10,070] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 194, "Launch": 48} (242 total users)
+[2026-10-16 01:02:11,061] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 252 users at 10.00 spawn rate
+[2026-10-16 01:02:11,062] Gurnoors-Laptop/INFO/locust.runners: Ramping to 252 users at a rate of 10.00 per second
+[2026-10-16 01:02:11,065] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 202, "Launch": 50} (252 total users)
+[2026-10-16 01:02:12,068] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 262 users at 10.00 spawn rate
+[2026-10-16 01:02:12,072] Gurnoors-Laptop/INFO/locust.runners: Ramping to 262 users at a rate of 10.00 per second
+[2026-10-16 01:02:12,078] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 210, "Launch": 52} (262 total users)
+[2026-10-16 01:02:13,070] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 272 users at 10.00 spawn rate
+[2026-10-16 01:02:13,072] Gurnoors-Laptop/INFO/locust.runners: Ramping to 272 users at a rate of 10.00 per second
+[2026-10-16 01:02:13,077] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 218, "Launch": 54} (272 total users)
+[2026-10-16 01:02:14,076] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 282 users at 10.00 spawn rate
+[2026-10-16 01:02:14,078] Gurnoors-Laptop/INFO/locust.runners: Ramping to 282 users at a rate of 10.00 per second
+[2026-10-16 01:02:14,081] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 226, "Launch": 56} (282 total users)
+[2026-10-16 01:02:15,076] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 292 users at 10.00 spawn rate
+[2026-10-16 01:02:15,079] Gurnoors-Laptop/INFO/locust.runners: Ramping to 292 users at a rate of 10.00 per second
+[2026-10-16 01:02:15,084] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 234, "Launch": 58} (292 total users)
+[2026-10-16 01:02:16,079] Gurnoors-Laptop/INFO/locust.runners: Shape test updating to 300 users at 10.00 spawn rate
+[2026-10-16 01:02:16,081] Gurnoors-Laptop/INFO/locust.runners: Ramping to 300 users at a rate of 10.00 per second
+[2026-10-16 01:02:16,087] Gurnoors-Laptop/INFO/locust.runners: All users spawned: {"Browse": 240, "Launch": 60} (300 total users)
+[2026-10-16 01:03:46,217] Gurnoors-Laptop/INFO/locust.runners: Shape test stopping
+[2026-10-16 01:03:46,611] Gurnoors-Laptop/INFO/locust.main: Shape test completed, shutting down
+[2026-10-16 01:03:46,683] Gurnoors-Laptop/INFO/locust.main: Shutting down (exit code 0)
+Type     Name                                                                          # reqs      # fails |    Avg     Min     Max    Med |   req/s  failures/s
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+GET      GET /events                                                                     7403     0(0.00%) |     24       2     833     14 |   61.40        0.00
+GET      GET /events/{id}                                                               17115     0(0.00%) |     29       1     851     14 |  141.95        0.00
+POST     POST /categories/{id}/registrations                                             3981     0(0.00%) |    592      11    2196    430 |   33.02        0.00
+--------|----------------------------------------------------------------------------|-------|-------------|-------|-------|-------|-------|--------|-----------
+         Aggregated                                                                     28499     0(0.00%) |    106       1    2196     17 |  236.37        0.00
+
+Response time percentiles (approximated)
+Type     Name                                                                                  50%    66%    75%    80%    90%    95%    98%    99%  99.9% 99.99%   100% # reqs
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+GET      GET /events                                                                            14     21     28     32     46     61    130    250    490    830    830   7403
+GET      GET /events/{id}                                                                       14     21     28     33     50     77    220    350    580    790    850  17115
+POST     POST /categories/{id}/registrations                                                   430    810   1000   1100   1400   1500   1700   1800   2100   2200   2200   3981
+--------|--------------------------------------------------------------------------------|--------|------|------|------|------|------|------|------|------|------|------|------
+         Aggregated                                                                             17     28     40     50    250    760   1300   1500   1900   2100   2200  28499
+
+Traceback (most recent call last):
+  File "src/gevent/greenlet.py", line 912, in gevent._gevent_cgreenlet.Greenlet.run
+  File "C:\Users\Gurnoor Kaur\Desktop\EntriX\.venv\Lib\site-packages\locust\stats.py", line 1170, in stats_writer
+    self.requests_csv_filehandle.seek(requests_csv_data_start)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: I/O operation on closed file.
+2026-10-15T19:33:46Z <Greenlet at 0x121bc17bba0: <bound method StatsCSVFileWriter.stats_writer of <locust.stats.StatsCSVFileWriter object at 0x00000121BC1A8AD0>>> failed with ValueError
+
+invariant 1_confirmed_count_matches_registrations: OK
+invariant 2_confirmed_count_within_capacity: OK
+invariant 3_waitlist_implies_full: OK
+invariant 4_one_active_registration_per_user_per_category: OK
+invariant 5_one_team_per_user_per_category: OK
+registrations_by_status: [["confirmed", "500"], ["waitlisted", "3481"]]
+categories_over_capacity: [["0"]]
+hot_categories: [["Table Tennis", "500", "500", "500", "3481"]]
+outbox_by_status: [["sent", "3981"]]
+users: [["3982"]]
+RESULT: ALL INVARIANTS HOLD
+[cache-on] resetting database and Redis
+[cache-on] restarting the API with {'CACHE_ENABLED': 'true', 'RATE_LIMIT_IP_PER_MIN': '1000000', 'RATE_LIMIT_USER_PER_MIN': '10', 'WEB_CONCURRENCY': '1', 'DB_POOL_SIZE': '20', 'DB_MAX_OVERFLOW': '20', 'AUTH_MODE': 'dev'}
+[cache-on] seeding data
+[cache-on] running Locust for 120s
+[cache-on] checking invariants

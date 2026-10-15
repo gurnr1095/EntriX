@@ -1,0 +1,33 @@
+{
+  "label": "cache-off",
+  "machine": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "python": "3.13.3",
+    "logical_cpus": 16,
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13620H",
+    "ram_gb": 15.7,
+    "docker_version": "29.5.3",
+    "docker_cpus": 16,
+    "docker_memory_gb": 7.6,
+    "locust": "2.46.7"
+  },
+  "api_config": {
+    "CACHE_ENABLED": "false",
+    "RATE_LIMIT_IP_PER_MIN": "1000000",
+    "RATE_LIMIT_USER_PER_MIN": "10",
+    "WEB_CONCURRENCY": "1",
+    "DB_POOL_SIZE": "20",
+    "DB_MAX_OVERFLOW": "20",
+    "AUTH_MODE": "dev"
+  },
+  "load": {
+    "peak_users": 300,
+    "ramp_seconds": 30,
+    "run_seconds": 120,
+    "browse_to_launch_user_ratio": "4:1"
+  },
+  "started_at": "2026-10-16 00:59:13 +0530",
+  "finished_at": "2026-10-16 01:01:31 +0530",
+  "locust_exit_code": 0,
+  "invariants_exit_code": 0
+}

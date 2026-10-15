@@ -5,11 +5,18 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class AppError(Exception):
-    def __init__(self, status_code: int, code: str, message: str) -> None:
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.code = code
         self.message = message
+        self.headers = headers
 
 
 def _body(code: str, message: str) -> dict[str, dict[str, str]]:
@@ -19,7 +26,9 @@ def _body(code: str, message: str) -> dict[str, dict[str, str]]:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _app_error(_: Request, exc: AppError) -> JSONResponse:
-        return JSONResponse(_body(exc.code, exc.message), status_code=exc.status_code)
+        return JSONResponse(
+            _body(exc.code, exc.message), status_code=exc.status_code, headers=exc.headers
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:

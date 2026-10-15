@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Header, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.deps import CurrentUser, get_current_user
+from app.deps import CurrentUser, get_current_user, registration_rate_limit
 from app.errors import AppError
 from app.models import Team
 from app.routers.common import stored_json_response
@@ -72,7 +72,12 @@ async def leave_team(
     return Response(status_code=204)
 
 
-@router.post("/teams/{team_id}/register", response_model=RegistrationOut, status_code=201)
+@router.post(
+    "/teams/{team_id}/register",
+    response_model=RegistrationOut,
+    status_code=201,
+    dependencies=[Depends(registration_rate_limit)],
+)
 async def register_team(
     team_id: uuid.UUID,
     request: Request,

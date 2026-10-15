@@ -5,12 +5,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.deps import CurrentUser, get_current_user, require_organizer
+from app.deps import CurrentUser, get_current_user, registration_rate_limit, require_organizer
 from app.errors import AppError
 from app.routers.common import stored_json_response
 from app.routers.events import category_out
 from app.schemas import CategoryOut, CategoryPatch, RegistrationOut
-from app.services import idempotency, registration_service
+from app.services import cache, idempotency, registration_service
 
 router = APIRouter(tags=["categories"])
 
@@ -51,11 +51,15 @@ async def patch_category(
         if "categories_event_id_name_key" in str(exc.orig):
             raise AppError(409, "category_name_taken", "Category name already used") from exc
         raise
+    await cache.cache_delete(cache.event_key(category.event_id))
     return category_out(category)
 
 
 @router.post(
-    "/categories/{category_id}/registrations", response_model=RegistrationOut, status_code=201
+    "/categories/{category_id}/registrations",
+    response_model=RegistrationOut,
+    status_code=201,
+    dependencies=[Depends(registration_rate_limit)],
 )
 async def register(
     category_id: uuid.UUID,
