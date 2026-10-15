@@ -1,0 +1,89 @@
+# The PAID, full-architecture Blueprint: separate worker, Redis, managed Postgres.
+# Use it with: New > Blueprint > "Blueprint file path" = render.paid.yaml. The free-tier
+# version is render.yaml (see DEPLOY.md).
+#
+# WARNING: no `plan` is set below, and Render's documented behaviour when `plan` is omitted is
+# to use a paid default (0.5c-512mb for a web service). Set `plan:` on every service and
+# database, or pick plans in the dashboard, before you create this Blueprint.
+# Values marked `sync: false` are asked for once, when the Blueprint is first created.
+
+databases:
+  - name: entrix-db
+    databaseName: entrix
+    user: entrix
+
+services:
+  # Redis-compatible store for rate limiting and caching. Private network only.
+  - type: keyvalue
+    name: entrix-redis
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # no access from the public internet
+
+  - type: web
+    name: entrix-api
+    runtime: docker
+    healthCheckPath: /healthz
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENV
+        value: prod
+      - key: AUTH_MODE
+        value: clerk
+      - key: DATABASE_URL
+        fromDatabase:
+          name: entrix-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: entrix-redis
+          property: connectionString
+      # Must be IDENTICAL on the web service and the worker (emails carry QR codes the API
+      # verifies). Generate one with:  python -c "import secrets; print(secrets.token_urlsafe(48))"
+      - key: QR_SECRET
+        sync: false
+      - key: CLERK_ISSUER # e.g. https://your-app.clerk.accounts.dev
+        sync: false
+      - key: CLERK_JWKS_URL # <issuer>/.well-known/jwks.json
+        sync: false
+      # How many reverse proxies sit in front of the app. Check it after deploy (DEPLOY.md,
+      # "Rate limiting behind Render"); the wrong value makes everyone share one IP limit.
+      - key: TRUSTED_PROXY_HOPS
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: DB_POOL_SIZE
+        value: "10"
+      - key: DB_MAX_OVERFLOW
+        value: "10"
+
+  - type: worker
+    name: entrix-worker
+    runtime: docker
+    dockerCommand: python -m app.worker.outbox_worker
+    envVars:
+      - key: ENV
+        value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: entrix-db
+          property: connectionString
+      - key: QR_SECRET # the same value as on entrix-api
+        sync: false
+      # Outgoing email: use any SMTP provider (Brevo, Mailgun, SES, ...). Port 587 + STARTTLS.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_STARTTLS
+        value: "true"
+      - key: MAIL_FROM # an address your SMTP provider has verified
+        sync: false
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
+        value: "2"

@@ -5,3 +5,7 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 .env
+
+# Any other env file (.env.brevo, .env.local, ...) may hold real keys: never commit.
+.env.*
+!.env.example

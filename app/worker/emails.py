@@ -37,9 +37,17 @@ def _when(ctx: MailContext) -> str:
 
 
 def build_message(
-    event_type: str, ctx: MailContext, outbox_id: int, mail_from: str
+    event_type: str,
+    ctx: MailContext,
+    outbox_id: int,
+    mail_from: str,
+    *,
+    inline_qr: bool = True,
 ) -> EmailMessage | None:
     """Build the email for an outbox row, or None when it should not be sent.
+
+    `inline_qr=False` is for providers whose API cannot embed images (cid:): the QR code is
+    then a normal attachment and the text says so.
 
     Delivery is at-least-once, so every message names the registration ID and carries
     the outbox row id: a duplicate is recognisable and harmless.
@@ -85,12 +93,25 @@ def build_message(
     html_lines = [f"<p>Hi {escape(ctx.name)},</p>", *(f"<p>{escape(x)}</p>" for x in lines)]
     html_lines.append(f"<p>{escape(details)}<br><small>{escape(ref)}</small></p>")
 
-    if event_type in _QR_TYPES:
+    if event_type in _QR_TYPES and inline_qr:
         text_lines += ["", "Show this check-in code at the venue:", ctx.token]
         html_lines.append(
             "<p>Show this QR code at the venue:</p>"
             '<p><img src="cid:qr" alt="Check-in QR code" width="240" height="240"></p>'
             "<p><small>If the image does not load, your code is:<br>"
+            f"{escape(ctx.token)}</small></p>"
+        )
+    elif event_type in _QR_TYPES:
+        text_lines += [
+            "",
+            "Your check-in QR code is attached to this email (qr.png). Show it at the venue.",
+            "If you cannot open the attachment, your code is:",
+            ctx.token,
+        ]
+        html_lines.append(
+            "<p>Your check-in QR code is attached to this email (<b>qr.png</b>). "
+            "Show it at the venue.</p>"
+            "<p><small>If you cannot open the attachment, your code is:<br>"
             f"{escape(ctx.token)}</small></p>"
         )
     alternatives = EmailMessage()
@@ -100,7 +121,12 @@ def build_message(
     )
 
     msg = alternatives
-    if event_type in _QR_TYPES:
+    if event_type in _QR_TYPES and not inline_qr:
+        # multipart/mixed[ alternative[text, html], qr.png ]: an ordinary attachment.
+        alternatives.add_attachment(
+            _qr_png(ctx.token), maintype="image", subtype="png", filename="qr.png"
+        )
+    elif event_type in _QR_TYPES:
         # multipart/related[ alternative[text, html], image ]: the image sits beside the
         # alternatives, the layout mail clients (and MailHog's cid lookup) expect.
         image = EmailMessage()

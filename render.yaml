@@ -1,86 +1,63 @@
-# Render Blueprint for EntriX. See DEPLOY.md for the step-by-step.
+# Render Blueprint for EntriX on the FREE tier. See DEPLOY.md for the step-by-step.
 #
-# Plans are deliberately not set here: pick them in the Render dashboard when you create the
-# Blueprint (plan names change over time, and a free database or Redis may expire).
+# One free web service runs everything that Render would otherwise charge for:
+#   - the API,
+#   - the email worker (RUN_WORKER_IN_API: free plans have no background workers),
+#   - database migrations (RUN_MIGRATIONS_ON_START: free plans have no pre-deploy command).
+# The database is Neon (free, does not expire after 30 days like Render's free Postgres) and
+# there is no Redis (rate limits and the cache live in memory, correct for one instance).
+# Email goes out over HTTPS through Brevo, because free web services cannot use SMTP ports.
+#
+# The full paid architecture is in render.paid.yaml.
 # Values marked `sync: false` are asked for once, when the Blueprint is first created.
 
-databases:
-  - name: entrix-db
-    databaseName: entrix
-    user: entrix
-
 services:
-  # Redis-compatible store for rate limiting and caching. Private network only.
-  - type: keyvalue
-    name: entrix-redis
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList: [] # no access from the public internet
-
   - type: web
     name: entrix-api
     runtime: docker
-    healthCheckPath: /healthz
-    preDeployCommand: alembic upgrade head
+    plan: free # set explicitly: when `plan` is omitted Render picks a paid default
+    # IMPORTANT: use the Render region nearest your Neon project (Neon's dashboard shows its
+    # region); every request makes several database round trips, so distance costs real time.
+    region: singapore
+    healthCheckPath: /livez # does not touch the database, so it never wakes a sleeping Neon
     envVars:
       - key: ENV
         value: prod
       - key: AUTH_MODE
         value: clerk
+      # Neon: copy the DIRECT connection string (not the "pooled" one). postgres:// URLs,
+      # sslmode and channel_binding are all handled by the app.
       - key: DATABASE_URL
-        fromDatabase:
-          name: entrix-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: entrix-redis
-          property: connectionString
-      # Must be IDENTICAL on the web service and the worker (emails carry QR codes the API
-      # verifies). Generate one with:  python -c "import secrets; print(secrets.token_urlsafe(48))"
+        sync: false
+      # Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"
       - key: QR_SECRET
         sync: false
       - key: CLERK_ISSUER # e.g. https://your-app.clerk.accounts.dev
         sync: false
       - key: CLERK_JWKS_URL # <issuer>/.well-known/jwks.json
         sync: false
-      # How many reverse proxies sit in front of the app. Check it after deploy (DEPLOY.md,
-      # "Rate limiting behind Render"); the wrong value makes everyone share one IP limit.
+      # How many reverse proxies sit in front of the app; check it after deploy (DEPLOY.md).
       - key: TRUSTED_PROXY_HOPS
         sync: false
+      - key: RUN_WORKER_IN_API
+        value: "true"
+      - key: RUN_MIGRATIONS_ON_START
+        value: "true"
+      # Sleep up to an hour when no email is waiting, so an idle database can suspend. A new
+      # registration wakes the worker immediately; this only bounds the idle sleep.
+      - key: OUTBOX_IDLE_POLL_SECONDS
+        value: "3600"
+      - key: EMAIL_BACKEND
+        value: brevo
+      - key: BREVO_API_KEY # a Brevo API key (not the SMTP key). Never commit it.
+        sync: false
+      - key: MAIL_FROM # the sender address you verified in Brevo
+        sync: false
+      # No REDIS_URL on purpose: in-memory rate limiting and cache, which is correct for the
+      # single process below. (More than one worker process would give each its own counters.)
       - key: WEB_CONCURRENCY
         value: "1"
       - key: DB_POOL_SIZE
-        value: "10"
+        value: "5"
       - key: DB_MAX_OVERFLOW
-        value: "10"
-
-  - type: worker
-    name: entrix-worker
-    runtime: docker
-    dockerCommand: python -m app.worker.outbox_worker
-    envVars:
-      - key: ENV
-        value: prod
-      - key: DATABASE_URL
-        fromDatabase:
-          name: entrix-db
-          property: connectionString
-      - key: QR_SECRET # the same value as on entrix-api
-        sync: false
-      # Outgoing email: use any SMTP provider (Brevo, Mailgun, SES, ...). Port 587 + STARTTLS.
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: SMTP_STARTTLS
-        value: "true"
-      - key: MAIL_FROM # an address your SMTP provider has verified
-        sync: false
-      - key: DB_POOL_SIZE
-        value: "3"
-      - key: DB_MAX_OVERFLOW
-        value: "2"
+        value: "5"

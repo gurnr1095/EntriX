@@ -100,12 +100,17 @@ app/
 alembic/      migrations (no create_all in app code)
 tests/        real-Postgres tests, one file per feature
 loadtests/    Locust scenarios, runner, invariant check, results/
-render.yaml   Render Blueprint      DEPLOY.md  deployment guide
+render.yaml   free Render Blueprint   render.paid.yaml  full architecture
+scripts/      send_test_email (email deliverability check)   DEPLOY.md  deployment guide
 ```
 
 ## Deploying
 
-See [DEPLOY.md](DEPLOY.md) (Render, with Clerk for sign-in).
+[DEPLOY.md](DEPLOY.md) covers a **free** setup (one Render web service running the API, the
+email worker and migrations; Neon for Postgres; Brevo for email; Clerk for sign-in) and points
+to `render.paid.yaml` for the full architecture (separate worker, Redis, managed Postgres).
+Before relying on email, send yourself a real test:
+`python -m scripts.send_test_email you@gmail.com`.
 
 ## Documents
 

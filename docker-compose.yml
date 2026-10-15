@@ -68,6 +68,10 @@ services:
     environment:
       <<: *app-env
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+      # Free-tier profile, to try locally: worker inside the API, migrations at start.
+      RUN_WORKER_IN_API: ${RUN_WORKER_IN_API:-false}
+      RUN_MIGRATIONS_ON_START: ${RUN_MIGRATIONS_ON_START:-false}
+      OUTBOX_IDLE_POLL_SECONDS: ${OUTBOX_IDLE_POLL_SECONDS:-2}
     ports:
       - "8000:8000"
     depends_on:

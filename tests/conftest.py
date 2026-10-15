@@ -23,6 +23,34 @@ os.environ["RATE_LIMIT_IP_PER_MIN"] = "1000000"
 os.environ["RATE_LIMIT_CHECKIN_PER_MIN"] = "1000000"
 os.environ["CACHE_ENABLED"] = "false"  # cache tests switch it on explicitly
 
+# The tests must not depend on a developer's `.env` (which may hold a real Brevo key or QR
+# secret) or their shell. Real environment variables beat the `.env` file, so pin everything
+# the tests rely on to its documented default.
+os.environ.update(
+    {
+        "QR_SECRET": "change-me",
+        "CLERK_JWKS_URL": "",
+        "CLERK_ISSUER": "",
+        "EMAIL_BACKEND": "smtp",
+        "BREVO_API_KEY": "",
+        "MAIL_FROM": "no-reply@sportreg.local",
+        "SMTP_HOST": "localhost",
+        "SMTP_PORT": "1025",
+        "SMTP_USER": "",
+        "SMTP_PASSWORD": "",
+        "SMTP_STARTTLS": "false",
+        "RUN_WORKER_IN_API": "false",
+        "OUTBOX_POLL_SECONDS": "2",
+        "OUTBOX_IDLE_POLL_SECONDS": "2",
+        "OUTBOX_MAX_ATTEMPTS": "8",
+        "TRUSTED_PROXY_HOPS": "0",
+        "CACHE_TTL_SECONDS": "3",
+        "RATE_LIMIT_ENABLED": "true",
+        "DB_POOL_SIZE": "20",
+        "DB_MAX_OVERFLOW": "20",
+    }
+)
+
 import httpx  # noqa: E402
 import pytest_asyncio  # noqa: E402
 from sqlalchemy import text  # noqa: E402

@@ -21,4 +21,7 @@ USER appuser
 
 EXPOSE 8000
 # $PORT is set by hosts like Render; WEB_CONCURRENCY (uvicorn's own convention) sets workers.
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# RUN_MIGRATIONS_ON_START=true applies migrations before serving, for hosts with no pre-deploy
+# step (Render's free tier). Safe with a single instance; if migrating fails, the container
+# exits instead of serving a database in the wrong shape.
+CMD ["sh", "-c", "if [ \"$RUN_MIGRATIONS_ON_START\" = \"true\" ]; then alembic upgrade head || exit 1; fi; exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

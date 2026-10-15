@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -41,16 +42,43 @@ class Settings(BaseSettings):
     smtp_starttls: bool = False
     mail_from: str = "no-reply@sportreg.local"
     outbox_poll_seconds: float = 2
+    # Longest the worker sleeps when nothing is due. Small for a dedicated worker; a free-tier
+    # deployment sets it high so an idle database can suspend (a new registration wakes the
+    # worker immediately regardless, see services/outbox.py).
+    outbox_idle_poll_seconds: float = 2
     outbox_max_attempts: int = 8
+    # Run the outbox worker inside the API process (free hosting has no background workers).
+    run_worker_in_api: bool = False
+    # How emails leave the system. "smtp" for MailHog or a normal SMTP server; "brevo" sends
+    # through Brevo's HTTPS API, for hosts that block outbound SMTP ports.
+    email_backend: Literal["smtp", "brevo"] = "smtp"
+    brevo_api_key: str = ""
 
     @field_validator("database_url", "test_database_url")
     @classmethod
     def _async_driver(cls, value: str) -> str:
-        """Hosting platforms hand out postgres:// or postgresql:// URLs; we need asyncpg."""
-        for prefix in ("postgres://", "postgresql://"):
-            if value.startswith(prefix):
-                return "postgresql+asyncpg://" + value[len(prefix) :]
-        return value
+        return normalise_database_url(value)
+
+
+def normalise_database_url(url: str) -> str:
+    """Turn a hosting provider's Postgres URL into one SQLAlchemy + asyncpg understand.
+
+    Providers (Render, Neon, ...) hand out `postgres://` or `postgresql://` URLs, and Neon's
+    carry libpq options asyncpg rejects: `sslmode=require` must be spelled `ssl=require`, and
+    `channel_binding` is not supported at all.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            url = "postgresql+asyncpg://" + url[len(prefix) :]
+    if not url.startswith("postgresql+asyncpg://"):
+        return url
+    parts = urlsplit(url)
+    query = []
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        if key == "channel_binding":
+            continue
+        query.append(("ssl" if key == "sslmode" else key, value))
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 @lru_cache
@@ -62,6 +90,8 @@ def validate_worker_startup(settings: Settings) -> None:
     """Checks every process needs (the worker signs QR codes too)."""
     if settings.env == "prod" and settings.qr_secret in {"", "change-me"}:
         raise RuntimeError("QR_SECRET must be set to a long random value when ENV=prod")
+    if settings.email_backend == "brevo" and not settings.brevo_api_key:
+        raise RuntimeError("EMAIL_BACKEND=brevo needs BREVO_API_KEY")
 
 
 def validate_startup(settings: Settings) -> None:
