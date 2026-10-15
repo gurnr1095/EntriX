@@ -127,7 +127,7 @@ If it ever changes, QR codes already emailed stop verifying.
    | `BREVO_API_KEY` | from Brevo |
    | `MAIL_FROM` | the **plain** address you verified in Brevo, e.g. `you@gmail.com`: no quotes, no `<>`, no name |
    | `MAIL_FROM_NAME` | the name recipients see, e.g. `EntriX` (the Blueprint already sets it) |
-   | `TRUSTED_PROXY_HOPS` | `1` to start, then check (section 4) |
+   | `TRUSTED_PROXY_HOPS` | `3` (measured on Render: visitor, Cloudflare, Render's internal proxy; section 4) |
 
 3. Watch the first deploy's logs. You should see Alembic apply the migration
    (`Running upgrade  -> 0001`), then `outbox worker running inside the API process`.
@@ -187,18 +187,27 @@ event), printing `[ OK ]` or `[FAIL]` for each of about 20 steps. Your user must
    Brevo over HTTPS. The script cannot see your mailbox.
 3. It leaves one closed event named `SMOKE TEST <time>` behind (events have no delete endpoint).
 
-## 4. Rate limiting behind Render (do this once)
+## 4. Rate limiting behind Render
 
-Render's proxy sits in front of the app, so the app must be told how many proxies to trust to
-work out a visitor's IP. Wrong, and everyone shares one limit (60 requests a minute for the whole
-site), or the limit can be dodged.
+Render puts proxies in front of the app, so the app must be told how many to trust when working
+out a visitor's IP. Wrong, and either everyone shares one limit or the limit can be dodged.
 
-1. Deploy with `TRUSTED_PROXY_HOPS=1`.
-2. Trigger a limit from your own machine (send the same registration 11 times quickly).
-3. In the logs find `rate limited ... ip=... x_forwarded_for=...`.
-4. `ip` should be **your** public address. If it is a Render or CDN address, raise
-   `TRUSTED_PROXY_HOPS` by one and repeat. At start-up the app also warns if it runs in production
-   with `TRUSTED_PROXY_HOPS=0`.
+**Measured on the live free tier** (from the production log of a rate-limited request):
+```
+x_forwarded_for = 'VISITOR, a Cloudflare address, 10.x.x.x (Render's internal proxy)'
+```
+Three entries, with the visitor first. The proxies add themselves on the right and cannot be forged;
+anything a visitor sends lands on the left. So the visitor is the **3rd entry from the right**:
+**`TRUSTED_PROXY_HOPS=3`**. The Blueprint sets it. (`1`, which I first suggested, picked Render's
+internal address, so the whole site shared one "60 requests a minute" limit; `2` picks a Cloudflare
+address. Both are pinned as wrong in `tests/test_proxy_hops.py`.)
+
+To re-check after any change of hosting:
+1. Get a token (section 3b) and send more than 10 registration requests within a minute (the loop in
+   the test page instructions); the later ones return `429`.
+2. In the Render logs find `rate limited ... ip=... x_forwarded_for=...`.
+3. `ip=` must be **your own public address** (`curl.exe -s https://api.ipify.org`). If not, change
+   `TRUSTED_PROXY_HOPS` until it is. At start-up the app warns if it runs in production with `0`.
 
 ## 5. Event-day checklist
 

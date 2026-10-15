@@ -310,3 +310,9 @@ Fixes, each pinned by tests (removing the first two fails exactly their tests):
 3. `MAIL_FROM` can now be a plain address, with the display name in a separate `MAIL_FROM_NAME`, so nobody has to type `Name <address>` into a dashboard. Stray surrounding quotes are stripped from both.
 4. The worker logs `outbox N sent (type)` on success (row id and type only, no address). Before, failures were visible and successes left no trace.
 Lesson: validate configuration at start-up and print what was received; make the easy way to configure the safe way too; and write down wrong diagnoses, because the first plausible explanation is not always the cause.
+
+### 56. The proxy chain on Render, measured (replaces the guess in entry 52)
+A rate-limited request on the live service logged `x_forwarded_for='49.43.109.43, 104.22.66.241, 10.26.96.152'` and `ip=10.26.96.152`. So: the visitor, then a Cloudflare edge address, then Render's internal proxy (a private 10.x address, also the socket peer). With `TRUSTED_PROXY_HOPS=1` the app took the last entry, Render's internal address, for every request, which made the per-IP limit (60 a minute) apply to the *whole site combined*. The correct value is **3**. Entry 52 had guessed "probably 2"; that would have picked a Cloudflare address, also shared by many visitors.
+It is safe against forged headers: a visitor can only add entries on the left; the three trusted proxies append on the right, so the third from the right is always what the first proxy saw. If a request has fewer entries than expected, the app falls back to the socket address rather than trusting a short header.
+All of this is pinned in `tests/test_proxy_hops.py` using the observed header, including the two wrong values. `render.yaml` now sets 3 as the default.
+The logging added earlier for exactly this purpose (`rate limited ... ip=... x_forwarded_for=...`) is what made this a five-minute diagnosis instead of a guess.
