@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/errors";
 import { isoToLocal, localToIso, nextStatus, nextStatusLabel, SLUG_PATTERN, slugify, validateEventTimes } from "@/lib/organizer";
-import { outcomeFromError, outcomeFromResult, ScanGate } from "@/lib/scan";
+import { describeCameraError, extractToken, outcomeFromError, outcomeFromResult, scanLink, ScanGate, tokenFromHash } from "@/lib/scan";
 
 describe("slugify", () => {
   it("makes API-valid slugs", () => {
@@ -99,5 +99,36 @@ describe("validateCategory", () => {
   });
   it("ignores team sizes for individual categories", () => {
     expect(validateCategory({ ...base, teamMin: "9", teamMax: "1" })).toBeNull();
+  });
+});
+
+describe("describeCameraError", () => {
+  it("explains the common camera failures", () => {
+    expect(describeCameraError(Object.assign(new Error("Permission denied"), { name: "NotAllowedError" }))).toMatch(/blocked/);
+    expect(describeCameraError("Error getting userMedia, error = NotAllowedError: Permission dismissed")).toMatch(/blocked/);
+    expect(describeCameraError(Object.assign(new Error("x"), { name: "NotFoundError" }))).toMatch(/No camera/);
+    expect(describeCameraError(Object.assign(new Error("x"), { name: "NotReadableError" }))).toMatch(/Another app/);
+    expect(describeCameraError(Object.assign(new Error("x"), { name: "OverconstrainedError" }))).toMatch(/Switch camera/);
+    expect(describeCameraError(new Error("weird"))).toBe("The camera could not start.");
+  });
+});
+
+describe("scan links", () => {
+  const token = "5b2f8c1e-0000-4000-8000-123456789abc.AbC_dEf-123";
+  it("round-trips a token through the link the QR shows", () => {
+    const link = scanLink("https://entri-x.vercel.app", token);
+    expect(link).toBe("https://entri-x.vercel.app/scan#t=" + encodeURIComponent(token));
+    expect(extractToken(link)).toBe(token);
+    expect(tokenFromHash(new URL(link).hash)).toBe(token);
+  });
+  it("still accepts a bare token (older QR codes and emails)", () => {
+    expect(extractToken("  " + token + " ")).toBe(token);
+  });
+  it("accepts a ?t= link and leaves other text alone", () => {
+    expect(extractToken("https://example.com/scan?t=" + token)).toBe(token);
+    expect(extractToken("https://example.com/other")).toBe("https://example.com/other");
+    expect(extractToken("hello world")).toBe("hello world");
+    expect(tokenFromHash("#nothing=here")).toBeNull();
+    expect(tokenFromHash("")).toBeNull();
   });
 });

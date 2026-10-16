@@ -9,6 +9,7 @@ import { RequireSignIn } from "@/components/require-sign-in";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
+import { tokenFromHash } from "@/lib/scan";
 import { isOrganizer } from "@/hooks/use-me";
 import type { EventOut, Role } from "@/types";
 
@@ -41,12 +42,19 @@ function Scanner({ role }: { role: Role }) {
     queryKey: ["scan-events", isOrganizer(role)],
     queryFn: async (): Promise<EventOut[]> => (isOrganizer(role) ? api.orgEvents() : (await api.listEvents()).items),
   });
-  const [eventId, setEventId] = useState<string | null>(null);
+  // This component only renders after sign-in and the role check, so it never runs on the server.
+  const [eventId, setEventId] = useState<string | null>(() => read());
+  const [linkToken, setLinkToken] = useState<string | null>(() => tokenFromHash(window.location.hash));
+  const clearLink = () => { setLinkToken(null); try { history.replaceState(null, "", window.location.pathname); } catch { /* ignore */ } };
 
-  useEffect(() => { setEventId(read()); }, []);
   useEffect(() => {
     if (!events.data) return;
-    if (eventId && !events.data.some((e) => e.id === eventId)) setEventId(null); // a stale saved choice
+    if (eventId && !events.data.some((e) => e.id === eventId)) { setEventId(null); return; } // a stale saved choice
+    if (!eventId) {
+      // Nothing chosen yet: start on the first published event so the camera is ready at once.
+      const first = events.data.find((e) => e.status === "published") ?? events.data[0];
+      if (first) { setEventId(first.id); write(first.id); }
+    }
   }, [events.data, eventId]);
 
   if (events.isPending) return <ListSkeleton rows={1} />;
@@ -66,7 +74,7 @@ function Scanner({ role }: { role: Role }) {
           </SelectContent>
         </Select>
       </div>
-      {eventId ? <QrScanner key={eventId} eventId={eventId} /> : (
+      {eventId ? <QrScanner key={eventId} eventId={eventId} initialToken={linkToken} onInitialTokenUsed={clearLink} /> : (
         <p className="rounded-xl bg-muted/50 p-4 text-center text-sm text-muted-foreground">Choose an event to start scanning.</p>
       )}
     </div>

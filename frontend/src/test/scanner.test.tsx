@@ -71,3 +71,22 @@ describe("QrScanner", () => {
     expect(host.textContent).toContain("Nothing was recorded");
   });
 });
+
+describe("QrScanner opened from a scan link", () => {
+  it("checks in the token from the link once, then reports it used", async () => {
+    const spy = vi.spyOn(api, "checkIn").mockResolvedValue(result(false));
+    const used = vi.fn();
+    await act(async () => { root.render(<QrScanner eventId="e1" initialToken="tok.from.link" onInitialTokenUsed={used} />); });
+    await act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("e1", "tok.from.link");
+    expect(used).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toContain("Asha Rao");
+  });
+
+  it("accepts a whole scan link typed or pasted by hand", async () => {
+    const spy = vi.spyOn(api, "checkIn").mockResolvedValue(result(false));
+    await typeAndSubmit("https://entri-x.vercel.app/scan#t=abc.def");
+    expect(spy).toHaveBeenCalledWith("e1", "abc.def");
+  });
+});

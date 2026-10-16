@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/page-state";
 import { api } from "@/lib/api";
-import { outcomeFromError, outcomeFromResult, ScanGate, type ScanOutcome } from "@/lib/scan";
+import { describeCameraError, extractToken, outcomeFromError, outcomeFromResult, ScanGate, type ScanOutcome } from "@/lib/scan";
 
 const READER_ID = "entrix-qr-reader";
 const BANNER_MS = 4000;
@@ -19,13 +19,15 @@ const TONE = {
 } as const;
 
 /** Camera scanner with a manual fallback. Every scan goes through ScanGate and api.checkIn. */
-export function QrScanner({ eventId }: { eventId: string }) {
+export function QrScanner({ eventId, initialToken, onInitialTokenUsed }: { eventId: string; initialToken?: string | null; onInitialTokenUsed?: () => void }) {
   const [camera, setCamera] = useState<CameraState>("starting");
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null);
   const [count, setCount] = useState(0);
   const [manual, setManual] = useState("");
   const [pending, setPending] = useState(false);
   const [cameraIndex, setCameraIndex] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const [cameraReason, setCameraReason] = useState<string | null>(null);
   const [cameraCount, setCameraCount] = useState(1);
   const gate = useRef(new ScanGate());
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -43,7 +45,7 @@ export function QrScanner({ eventId }: { eventId: string }) {
     if (!gate.current.begin(text)) return;
     setPending(true);
     try {
-      const result = await api.checkIn(eventRef.current, text.trim());
+      const result = await api.checkIn(eventRef.current, extractToken(text));
       const o = outcomeFromResult(result);
       if (o.tone === "success") setCount((c) => c + 1);
       show(o);
@@ -58,35 +60,59 @@ export function QrScanner({ eventId }: { eventId: string }) {
   // Start and stop the camera. html5-qrcode touches the DOM, so it is loaded only in the browser.
   useEffect(() => {
     let stopped = false;
+    let started = false;
     let scanner: { stop: () => Promise<void>; clear: () => void; isScanning?: boolean } | null = null;
     setCamera("starting");
     (async () => {
       try {
         const { Html5Qrcode } = await import("html5-qrcode");
-        const cameras = await Html5Qrcode.getCameras();
-        if (stopped) return;
-        setCameraCount(cameras.length || 1);
-        const chosen = cameras[cameraIndex % Math.max(cameras.length, 1)];
-        const instance = new Html5Qrcode(READER_ID);
+        const instance = new Html5Qrcode(READER_ID, { verbose: false });
         scanner = instance;
+        // The first start asks the browser for the rear camera (laptops fall back to their webcam).
+        // "Switch camera" then picks a specific device by id.
+        let source: string | { facingMode: string } = { facingMode: "environment" };
+        if (cameraIndex > 0) {
+          const cameras = await Html5Qrcode.getCameras();
+          const chosen = cameras[cameraIndex % Math.max(cameras.length, 1)];
+          if (chosen) source = chosen.id;
+        }
         await instance.start(
-          chosen ? chosen.id : { facingMode: "environment" },
+          source,
           { fps: 10, qrbox: (w: number, h: number) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } },
           (text: string) => { void submit(text); },
           () => { /* no code in this frame */ },
         );
-        if (stopped) { await instance.stop().catch(() => {}); return; }
+        started = true;
+        if (stopped) { try { await instance.stop(); } catch { /* already stopped */ } return; }
         setCamera("scanning");
-      } catch {
-        if (!stopped) setCamera("unavailable");
+        setCameraReason(null);
+        // Permission is granted now, so the device list is available for the Switch button.
+        Html5Qrcode.getCameras().then((c) => { if (!stopped) setCameraCount(c.length || 1); }, () => {});
+      } catch (e) {
+        console.error("Scanner camera failed:", e);
+        if (!stopped) { setCamera("unavailable"); setCameraReason(describeCameraError(e)); }
       }
     })();
     return () => {
       stopped = true;
       const s = scanner;
-      if (s) void s.stop().then(() => s.clear()).catch(() => {});
+      if (!s) return;
+      // stop() throws straight away if the camera never started, and an error in a cleanup would
+      // blank the whole page, so only stop what is running and swallow anything else.
+      try {
+        if (started) void s.stop().then(() => s.clear()).catch(() => {});
+        else s.clear();
+      } catch { /* nothing to release */ }
     };
-  }, [cameraIndex, submit]);
+  }, [cameraIndex, attempt, submit]);
+
+  // A scan link opened from the phone's own camera app arrives with the token already in the address.
+  const usedInitial = useRef(false);
+  useEffect(() => {
+    if (!initialToken || usedInitial.current) return;
+    usedInitial.current = true;
+    void submit(initialToken).finally(() => onInitialTokenUsed?.());
+  }, [initialToken, submit, onInitialTokenUsed]);
 
   useEffect(() => () => clearTimeout(hideTimer.current), []);
 
@@ -125,9 +151,9 @@ export function QrScanner({ eventId }: { eventId: string }) {
           <div className="flex flex-col items-center gap-2 p-6 text-center text-white">
             <CameraOff className="size-8" aria-hidden />
             <p className="font-semibold">The camera is not available</p>
-            <p className="max-w-xs text-sm text-white/80">
-              Allow camera access for this site, or use the box below to type or paste the code. The camera needs a secure (https) page.
-            </p>
+            <p className="max-w-xs text-sm text-white/80">{cameraReason ?? "The camera could not start."}</p>
+            <p className="max-w-xs text-sm text-white/80">You can still check people in with the box below.</p>
+            <Button variant="secondary" className="mt-2 min-h-11 rounded-full px-5" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
           </div>
         )}
       </div>

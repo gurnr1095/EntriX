@@ -6,6 +6,7 @@ import { Spinner } from "@/components/page-state";
 import { api } from "@/lib/api";
 import { messageFor } from "@/lib/errors";
 import { getCachedQr, setCachedQr } from "@/lib/qr-cache";
+import { scanLink } from "@/lib/scan";
 import type { MyRegistration } from "@/types";
 
 interface Props {
@@ -56,7 +57,7 @@ export function QrDialog({ registration, participantName, onClose }: Props) {
 
         <div className="mx-auto flex size-72 max-w-full items-center justify-center rounded-xl bg-white p-4">
           {token ? (
-            <QRCodeSVG value={token} size={256} level="H" bgColor="#ffffff" fgColor="#000000" title="Check-in QR code" className="h-full w-full" />
+            <QRCodeSVG value={scanLink(window.location.origin, token)} size={256} level="H" bgColor="#ffffff" fgColor="#000000" title="Check-in QR code" className="h-full w-full" />
           ) : error ? (
             <p role="alert" className="text-center text-sm text-neutral-700">{messageFor(error)}</p>
           ) : (
@@ -69,7 +70,7 @@ export function QrDialog({ registration, participantName, onClose }: Props) {
             <WifiOff className="size-3.5" />No connection. Showing your saved code.
           </p>
         )}
-        <p className="text-center text-xs text-muted-foreground">Show this code to the volunteer at the entrance.</p>
+        <p className="text-center text-xs text-muted-foreground">Show this code to the volunteer at the entrance. Their phone camera or scanner can read it.</p>
       </DialogContent>
     </Dialog>
   );
