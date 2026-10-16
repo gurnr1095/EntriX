@@ -39,11 +39,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
-      <header className="bg-background">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:h-20 md:px-8">
+      <header className="field-dark">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 md:px-8">
           <Link to="/" aria-label="EntriX home" className="flex min-w-0 items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <span className="flex size-9 items-center justify-center bg-primary text-primary-foreground"><ArrowUpRight className="size-6" strokeWidth={3} /></span>
-            <span className="font-display text-xl">Entri<span className="text-primary-text">X</span></span>
+            <span className="font-display text-xl">Entri<span className="text-field-accent">X</span></span>
           </Link>
 
           <nav aria-label="Desktop navigation" className="hidden items-center gap-1 md:flex">
@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               const active = activeFor(item.to);
               return (
                 <Link key={item.to} to={item.to} aria-current={active ? "page" : undefined}
-                  className={`inline-flex min-h-11 items-center gap-2 px-4 text-sm font-medium ${active ? "bg-foreground text-background" : "text-foreground hover:bg-card"}`}>
+                  className={`inline-flex min-h-11 items-center gap-2 px-4 text-sm font-medium ${active ? "bg-primary text-primary-foreground" : "hover:bg-white/10"}`}>
                   <Icon className="size-4" />{item.label}
                 </Link>
               );
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 md:gap-3">
-            <Button variant="ghost" size="icon" className="size-11" onClick={toggleTheme}
+            <Button variant="ghost" size="icon" className="size-11 hover:bg-white/10 hover:text-inherit" onClick={toggleTheme}
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Switch to light mode" : "Switch to dark mode"}>
               {dark ? <Sun /> : <Moon />}
             </Button>
@@ -78,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-6 md:px-8 md:pt-8">{children}</main>
 
       <footer className="safe-bottom-space field-accent">
         <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6 md:grid-cols-[auto_1fr] md:items-center md:gap-14 md:px-8 md:py-8">

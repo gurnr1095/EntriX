@@ -22,7 +22,7 @@ function Index() {
   return (
     <>
       {/* Hero: the photograph is the background, with a flat dark overlay so the white headline always reads. */}
-      <div className="bleed relative isolate -mt-6 overflow-hidden bg-black md:-mt-10">
+      <div className="bleed relative isolate -mt-6 overflow-hidden bg-black md:-mt-8">
         <div className="shutter absolute inset-0 -z-20">
           <img src={track} alt="" width={1536} height={512} className="h-full w-full object-cover" />
         </div>
@@ -40,7 +40,7 @@ function Index() {
         </div>
       </div>
 
-      <section id="events" className="scroll-mt-6 pt-16 md:pt-24">
+      <section id="events" className="scroll-mt-6 pt-10 md:pt-14">
         <div className="mb-8 flex items-end justify-between gap-4">
           <h2 className="rise text-[clamp(1.75rem,4.5vw,3.25rem)]">Upcoming events</h2>
           {events.isSuccess && <span className="shrink-0 pb-1 text-lg font-medium">{items.length} {items.length === 1 ? "event" : "events"}</span>}
