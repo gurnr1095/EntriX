@@ -54,13 +54,13 @@ function Index() {
           </EmptyState>
         )}
         {items.length > 0 && (
-          <ul className="grid gap-2">
+          <ul className="grid gap-1.5">
             {items.map((e, i) => (
               <li key={e.id} className="rise" style={delay(i)}>
                 <Link to="/events/$id" params={{ id: e.id }}
-                  className="group grid gap-3 bg-card p-5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:grid-cols-[1fr_auto] md:items-center md:p-7">
-                  <div className="min-w-0 space-y-2">
-                    <h3 className="break-words text-2xl font-medium group-hover:text-primary-text md:text-3xl">{e.name}</h3>
+                  className="group grid gap-2 bg-card p-4 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:grid-cols-[1fr_auto] md:items-center md:p-5">
+                  <div className="min-w-0 space-y-1">
+                    <h3 className="break-words text-xl font-medium group-hover:text-primary-text md:text-2xl">{e.name}</h3>
                     <p className="flex flex-wrap items-center gap-x-5 gap-y-1 text-base text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0" />{formatDateRange(e.starts_at, e.ends_at)}</span>
                       {e.venue && <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4 shrink-0" />{e.venue}</span>}

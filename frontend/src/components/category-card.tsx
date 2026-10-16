@@ -85,10 +85,10 @@ export function CategoryCard({ category, window }: { category: Category; window:
 
   return (
     <Card className={muted ? "opacity-90" : ""}>
-      <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-10 md:p-7">
-        <div className="min-w-0 space-y-3">
+      <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_9rem_12rem] md:items-center md:gap-6 md:p-5">
+        <div className="min-w-0 space-y-2">
           <div>
-            <h3 className="break-words text-2xl font-medium">{category.name}</h3>
+            <h3 className="break-words text-xl font-medium">{category.name}</h3>
             <p className="text-base text-muted-foreground">
               <span className="capitalize">{category.sport.replace(/-/g, " ")}</span> ·{" "}
               {category.participation === "team" ? `team of ${category.team_size_min} to ${category.team_size_max}` : "individual"}
@@ -99,21 +99,21 @@ export function CategoryCard({ category, window }: { category: Category; window:
 
         {/* The seat count is the loudest thing in the row: it is what people are racing for. */}
         <div className="md:text-right" aria-live="polite">
-          <p className={`font-display text-[clamp(3.25rem,9vw,5.5rem)] leading-none tabular-nums ${level === "urgent" && seats > 0 ? "text-destructive" : seats === 0 ? "text-muted-foreground" : ""}`}>{seats}</p>
+          <p className={`font-display ${String(seats).length > 2 ? "text-[clamp(2rem,5vw,2.75rem)]" : "text-[clamp(2.5rem,8vw,3.5rem)]"} leading-none tabular-nums ${level === "urgent" && seats > 0 ? "text-destructive" : seats === 0 ? "text-muted-foreground" : ""}`}>{seats}</p>
           <p className="text-base font-medium">
             {unit}
             {seats === 0 && category.waitlist_enabled ? ", waitlist open" : ""}
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 md:items-end [&_button]:w-full md:[&_button]:w-auto">
+        <div className="flex flex-col gap-2 [&_button]:w-full">
           {action === "not_open_yet" && <Button disabled variant="secondary" className="min-h-12">Registration not open yet</Button>}
           {action === "closed" && <Button disabled variant="secondary" className="min-h-12">Registration closed</Button>}
           {action === "full" && <Button disabled variant="secondary" className="min-h-12">Full</Button>}
 
           {(action === "register" || action === "waitlist") &&
             (isSignedIn ? (
-              <Button onClick={onRegister} disabled={register.pending || cooling} className="min-h-12 px-8 text-base font-semibold">
+              <Button onClick={onRegister} disabled={register.pending || cooling} className="min-h-11 px-6 text-base font-semibold">
                 {register.pending ? (
                   <Spinner label="Registering..." />
                 ) : cooling ? (
@@ -125,17 +125,17 @@ export function CategoryCard({ category, window }: { category: Category; window:
                 )}
               </Button>
             ) : (
-              <SignInButton mode="modal"><Button className="min-h-12 px-8 text-base font-semibold">Sign in to register</Button></SignInButton>
+              <SignInButton mode="modal"><Button className="min-h-11 px-6 text-base font-semibold">Sign in to register</Button></SignInButton>
             ))}
 
           {action === "team" &&
             (isSignedIn ? (
-              <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
-                <Button className="min-h-12 px-8 text-base font-semibold" onClick={() => setTeamDialog("create")}>Create team</Button>
-                <Button className="min-h-12 px-8 text-base font-semibold" variant="outline" onClick={() => setTeamDialog("join")}>Join with code</Button>
+              <div className="flex flex-col gap-2">
+                <Button className="min-h-11 px-6 text-base font-semibold" onClick={() => setTeamDialog("create")}>Create team</Button>
+                <Button className="min-h-11 px-6 text-base font-semibold" variant="outline" onClick={() => setTeamDialog("join")}>Join with code</Button>
               </div>
             ) : (
-              <SignInButton mode="modal"><Button className="min-h-12 px-8 text-base font-semibold">Sign in to join</Button></SignInButton>
+              <SignInButton mode="modal"><Button className="min-h-11 px-6 text-base font-semibold">Sign in to join</Button></SignInButton>
             ))}
         </div>
       </CardContent>

@@ -51,7 +51,7 @@ function EventView({ event }: { event: NonNullable<ReturnType<typeof useEvent>["
   return (
     <>
       {/* The event is the poster: its name on a flat red field, the facts under it in plain text. */}
-      <div className="bleed field-dark -mt-2 mb-12 md:mb-16">
+      <div className="bleed field-dark -mt-2 mb-8 md:mb-10">
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 md:px-8 md:pb-14 md:pt-12">
           <p className="rise mb-6 inline-block bg-primary px-3 py-1.5 text-base font-medium text-primary-foreground">
             {window === "open" ? "Registration open" : window === "upcoming" ? `Opens ${formatDateTime(event.reg_opens_at)}` : "Registration closed"}
@@ -72,7 +72,7 @@ function EventView({ event }: { event: NonNullable<ReturnType<typeof useEvent>["
           The organizers have not added any sports to this event.
         </EmptyState>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid gap-1.5">
           {event.categories.map((c, i) => <div key={c.id} className="rise" style={{ "--i": i } as CSSProperties}><CategoryCard category={c} window={window} /></div>)}
         </div>
       )}

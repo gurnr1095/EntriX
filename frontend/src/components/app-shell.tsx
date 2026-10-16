@@ -2,7 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { ArrowRight, ArrowUpRight, CalendarDays, Moon, Shield, Sun, Ticket, UserRound, Users } from "lucide-react";
+import { ContactInfo } from "@/components/contact-info";
 import { Button } from "@/components/ui/button";
+import { config } from "@/config";
 import { canScan, isOrganizer, useMe } from "@/hooks/use-me";
 import { navigation } from "@/lib/navigation";
 
@@ -78,10 +80,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
 
-      <footer className="safe-bottom-space field-dark">
-        <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 md:px-8 md:pt-14">
-          <p aria-hidden className="whitespace-nowrap font-display text-[clamp(2rem,12vw,9.25rem)] leading-[0.9] text-field-accent">EntriX</p>
-          <p className="mt-6 max-w-md text-lg">Pick your sport, grab a seat, show your pass at the gate.</p>
+      <footer className="safe-bottom-space field-accent">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6 md:grid-cols-[auto_1fr] md:items-center md:gap-14 md:px-8 md:py-8">
+          <Link to="/" aria-label="EntriX home" className="flex items-center gap-3 self-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="flex size-10 items-center justify-center bg-field-dark text-field-accent md:size-12"><ArrowUpRight className="size-6 md:size-8" strokeWidth={3} /></span>
+            <span className="font-display text-3xl leading-none md:text-4xl">EntriX</span>
+          </Link>
+          <div className="space-y-2 md:justify-self-end">
+            <p className="text-lg font-medium leading-snug">Pick your sport, grab a seat, show your pass at the gate.</p>
+            <ContactInfo contact={config.contact} />
+          </div>
         </div>
       </footer>
 
