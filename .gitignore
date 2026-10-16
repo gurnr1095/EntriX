@@ -9,3 +9,6 @@ __pycache__/
 # Any other env file (.env.brevo, .env.local, ...) may hold real keys: never commit.
 .env.*
 !.env.example
+
+# taste-skill working files
+.taste-skill/

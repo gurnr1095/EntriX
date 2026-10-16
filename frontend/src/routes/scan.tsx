@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/page-state";
 import { QrScanner } from "@/components/qr-scanner";
 import { RequireRole } from "@/components/require-role";
@@ -25,10 +26,7 @@ const write = (v: string) => { try { localStorage.setItem(STORE, v); } catch { /
 function Page() {
   return (
     <section className="mx-auto max-w-xl">
-      <div className="mb-8 border-b border-border pb-6">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">EntriX / Scanner</p>
-        <h1 className="font-display text-3xl font-extrabold md:text-4xl">Check-in</h1>
-      </div>
+      <PageHeader title="Check-in" />
       <RequireSignIn what="the scanner">
         <RequireRole roles={["volunteer", "organizer", "admin"]}>{(role) => <Scanner role={role} />}</RequireRole>
       </RequireSignIn>
@@ -75,7 +73,7 @@ function Scanner({ role }: { role: Role }) {
         </Select>
       </div>
       {eventId ? <QrScanner key={eventId} eventId={eventId} initialToken={linkToken} onInitialTokenUsed={clearLink} /> : (
-        <p className="rounded-xl bg-muted/50 p-4 text-center text-sm text-muted-foreground">Choose an event to start scanning.</p>
+        <p className="rounded-none bg-muted/50 p-4 text-center text-sm text-muted-foreground">Choose an event to start scanning.</p>
       )}
     </div>
   );

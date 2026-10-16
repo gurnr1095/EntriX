@@ -50,12 +50,12 @@ export function QrDialog({ registration, participantName, onClose }: Props) {
         </DialogHeader>
 
         {checkedIn && (
-          <p role="status" className="flex items-center justify-center gap-2 rounded-md bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
+          <p role="status" className="flex items-center justify-center gap-2 rounded-none bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100">
             <CheckCircle2 className="size-4" />Checked in
           </p>
         )}
 
-        <div className="mx-auto flex size-72 max-w-full items-center justify-center rounded-xl bg-white p-4">
+        <div className="mx-auto flex size-72 max-w-full items-center justify-center rounded-none bg-white p-4">
           {token ? (
             <QRCodeSVG value={scanLink(window.location.origin, token)} size={256} level="H" bgColor="#ffffff" fgColor="#000000" title="Check-in QR code" className="h-full w-full" />
           ) : error ? (

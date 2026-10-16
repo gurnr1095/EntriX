@@ -116,7 +116,7 @@ export function EventForm({ initial, mode, submitLabel, onSubmit }: Props) {
       </div>
       <p className="text-xs text-muted-foreground">Times are in your local time zone.</p>
       {shown && <p role="alert" className="text-sm font-medium text-destructive">{shown}</p>}
-      <Button type="submit" className="min-h-11 rounded-full px-6 font-semibold" disabled={pending}>
+      <Button type="submit" className="min-h-11 rounded-none px-6 font-semibold" disabled={pending}>
         {pending ? <Spinner label="Saving..." /> : submitLabel}
       </Button>
     </form>

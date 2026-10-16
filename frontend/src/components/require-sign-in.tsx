@@ -22,7 +22,7 @@ export function RequireSignIn({ children, what }: { children: ReactNode; what: s
       return (
         <EmptyState icon={<WifiOff className="size-6 text-muted-foreground" />} title="Sign-in is not loading">
           <p className="mb-4">Check your connection, or turn off any ad blocker for this site, then reload.</p>
-          <Button className="min-h-11 rounded-full px-6 font-semibold" onClick={() => window.location.reload()}>Reload</Button>
+          <Button className="min-h-11 rounded-none px-6 font-semibold" onClick={() => window.location.reload()}>Reload</Button>
         </EmptyState>
       );
     }
@@ -32,7 +32,7 @@ export function RequireSignIn({ children, what }: { children: ReactNode; what: s
     return (
       <EmptyState icon={<LogIn className="size-6 text-muted-foreground" />} title="Sign in to continue">
         <p className="mb-4">Sign in to see {what}.</p>
-        <SignInButton mode="modal"><Button className="min-h-11 rounded-full px-6 font-semibold">Sign in</Button></SignInButton>
+        <SignInButton mode="modal"><Button className="min-h-11 rounded-none px-6 font-semibold">Sign in</Button></SignInButton>
       </EmptyState>
     );
   }

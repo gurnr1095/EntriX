@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, MapPin, QrCode, Ticket } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState, ListSkeleton, Spinner } from "@/components/page-state";
 import { QrDialog } from "@/components/qr-dialog";
 import { RequireSignIn } from "@/components/require-sign-in";
@@ -30,10 +31,7 @@ export const Route = createFileRoute("/my/registrations")({
 function Page() {
   return (
     <section>
-      <div className="mb-8 border-b border-border pb-6">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">EntriX / My registrations</p>
-        <h1 className="font-display text-3xl font-extrabold md:text-4xl">My registrations</h1>
-      </div>
+      <PageHeader title="My registrations" />
       <RequireSignIn what="your registrations">
         <Registrations />
       </RequireSignIn>
@@ -71,7 +69,7 @@ function Registrations() {
     return (
       <EmptyState icon={<Ticket className="size-6 text-muted-foreground" />} title="No registrations yet">
         <p className="mb-4">When you register for an event it shows up here, with your QR code.</p>
-        <Button asChild className="min-h-11 rounded-full px-6 font-semibold"><Link to="/">Browse events</Link></Button>
+        <Button asChild className="min-h-11 rounded-none px-6 font-semibold"><Link to="/">Browse events</Link></Button>
       </EmptyState>
     );
   }
@@ -83,7 +81,7 @@ function Registrations() {
           const { canShowQr, canCancel } = registrationActions(r.status);
           return (
             <li key={r.registration_id}>
-              <Card className={`rounded-xl shadow-card ${r.status === "cancelled" ? "bg-muted/40" : ""}`}>
+              <Card className={`rounded-none ${r.status === "cancelled" ? "bg-muted/40" : ""}`}>
                 <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                   <div className="min-w-0 space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
@@ -92,7 +90,7 @@ function Registrations() {
                         <span className="text-sm font-semibold">Waitlist position {r.waitlist_position}</span>
                       )}
                     </div>
-                    <Link to="/events/$id" params={{ id: r.event_id }} className="block break-words font-display text-xl font-bold hover:text-primary">
+                    <Link to="/events/$id" params={{ id: r.event_id }} className="block break-words text-xl font-medium hover:text-primary-text">
                       {r.event_name}
                     </Link>
                     <p className="break-words text-sm font-medium">
@@ -100,19 +98,19 @@ function Registrations() {
                       {r.team_name && <span className="font-normal text-muted-foreground"> · team {r.team_name}</span>}
                     </p>
                     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0 text-primary" />{formatDateTime(r.event_starts_at)}</span>
-                      {r.venue && <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4 shrink-0 text-primary" />{r.venue}</span>}
+                      <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0 text-primary-text" />{formatDateTime(r.event_starts_at)}</span>
+                      {r.venue && <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4 shrink-0 text-primary-text" />{r.venue}</span>}
                     </p>
                   </div>
                   {(canShowQr || canCancel) && (
                     <div className="flex shrink-0 flex-col gap-2 sm:items-end [&_button]:w-full sm:[&_button]:w-auto">
                       {canShowQr && (
-                        <Button className="min-h-11 rounded-full px-6 font-semibold" onClick={() => setQrFor(r)}>
+                        <Button className="min-h-11 rounded-none px-6 font-semibold" onClick={() => setQrFor(r)}>
                           <QrCode />Show QR
                         </Button>
                       )}
                       {canCancel && (
-                        <Button variant="outline" className="min-h-11 rounded-full px-6" onClick={() => setCancelFor(r)}>Cancel</Button>
+                        <Button variant="outline" className="min-h-11 rounded-none px-6" onClick={() => setCancelFor(r)}>Cancel</Button>
                       )}
                     </div>
                   )}
@@ -125,7 +123,7 @@ function Registrations() {
 
       {list.hasNextPage && (
         <div className="mt-6 flex justify-center">
-          <Button variant="outline" className="min-h-11 rounded-full px-6" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
+          <Button variant="outline" className="min-h-11 rounded-none px-6" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
             {list.isFetchingNextPage ? <Spinner label="Loading..." /> : "Load more"}
           </Button>
         </div>

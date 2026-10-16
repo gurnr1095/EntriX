@@ -8,7 +8,7 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="space-y-4" aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-28 w-full rounded-md" />
+        <Skeleton key={i} className="h-28 w-full rounded-none" />
       ))}
     </div>
   );
@@ -17,7 +17,7 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return (
     <div role="alert" className="flex min-h-48 flex-col items-center justify-center gap-3 py-8 text-center">
-      <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+      <span className="flex size-12 items-center justify-center rounded-none bg-destructive/10">
         <AlertTriangle className="size-6 text-destructive" />
       </span>
       <p className="max-w-sm text-sm">{messageFor(error)}</p>
@@ -29,8 +29,8 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
 export function EmptyState({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
     <div className="flex min-h-56 flex-col items-center justify-center py-10 text-center">
-      <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-muted">{icon}</span>
-      <h3 className="font-display text-lg font-semibold">{title}</h3>
+      <span className="mb-5 flex size-14 items-center justify-center rounded-none bg-muted">{icon}</span>
+      <h3 className="text-lg font-medium">{title}</h3>
       {children && <div className="mt-2 text-sm text-muted-foreground">{children}</div>}
     </div>
   );

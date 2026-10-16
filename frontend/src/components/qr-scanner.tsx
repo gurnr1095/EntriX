@@ -129,7 +129,7 @@ export function QrScanner({ eventId, initialToken, onInitialTokenUsed }: { event
       <div
         role="status"
         aria-live="assertive"
-        className={`min-h-24 rounded-xl p-4 text-center ${outcome ? TONE[outcome.tone].cls : "bg-muted text-muted-foreground"}`}
+        className={`min-h-24 rounded-none p-4 text-center ${outcome ? TONE[outcome.tone].cls : "bg-muted text-muted-foreground"}`}
       >
         {outcome ? (
           <div className="flex flex-col items-center gap-1">
@@ -144,7 +144,7 @@ export function QrScanner({ eventId, initialToken, onInitialTokenUsed }: { event
         )}
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-black">
+      <div className="overflow-hidden rounded-none bg-black">
         <div id={READER_ID} className="min-h-64 w-full" />
         {camera === "starting" && <p className="p-4 text-center text-sm text-white"><Spinner label="Starting camera..." /></p>}
         {camera === "unavailable" && (
@@ -153,7 +153,7 @@ export function QrScanner({ eventId, initialToken, onInitialTokenUsed }: { event
             <p className="font-semibold">The camera is not available</p>
             <p className="max-w-xs text-sm text-white/80">{cameraReason ?? "The camera could not start."}</p>
             <p className="max-w-xs text-sm text-white/80">You can still check people in with the box below.</p>
-            <Button variant="secondary" className="mt-2 min-h-11 rounded-full px-5" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
+            <Button variant="secondary" className="mt-2 min-h-11 rounded-none px-5" onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
           </div>
         )}
       </div>
@@ -161,17 +161,17 @@ export function QrScanner({ eventId, initialToken, onInitialTokenUsed }: { event
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-semibold">Checked in this session: {count}</p>
         {cameraCount > 1 && (
-          <Button variant="outline" className="min-h-11 rounded-full px-5" onClick={() => setCameraIndex((i) => i + 1)}>
+          <Button variant="outline" className="min-h-11 rounded-none px-5" onClick={() => setCameraIndex((i) => i + 1)}>
             <RefreshCw />Switch camera
           </Button>
         )}
       </div>
 
-      <form onSubmit={onManual} className="space-y-2 rounded-xl bg-muted/50 p-4">
+      <form onSubmit={onManual} className="space-y-2 rounded-none bg-muted/50 p-4">
         <Label htmlFor="manual-token">Enter a code by hand</Label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Input id="manual-token" value={manual} onChange={(e) => setManual(e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} placeholder="Paste the code here" />
-          <Button type="submit" className="min-h-11 rounded-full px-6 font-semibold" disabled={pending || !manual.trim()}>Check in</Button>
+          <Button type="submit" className="min-h-11 rounded-none px-6 font-semibold" disabled={pending || !manual.trim()}>Check in</Button>
         </div>
       </form>
     </div>

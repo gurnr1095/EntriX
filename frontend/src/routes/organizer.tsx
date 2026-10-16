@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, MapPin, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { EventForm } from "@/components/event-form";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/page-state";
 import { RequireRole } from "@/components/require-role";
 import { RequireSignIn } from "@/components/require-sign-in";
@@ -24,10 +25,7 @@ export const Route = createFileRoute("/organizer")({
 function Page() {
   return (
     <section>
-      <div className="mb-8 border-b border-border pb-6">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">EntriX / Organizer</p>
-        <h1 className="font-display text-3xl font-extrabold md:text-4xl">Your events</h1>
-      </div>
+      <PageHeader title="Your events" />
       <RequireSignIn what="the organizer area">
         <RequireRole roles={["organizer", "admin"]}>{() => <Events />}</RequireRole>
       </RequireSignIn>
@@ -44,7 +42,7 @@ function Events() {
   return (
     <>
       <div className="mb-6 flex justify-end">
-        <Button className="min-h-11 rounded-full px-6 font-semibold" onClick={() => setCreating(true)}><Plus />New event</Button>
+        <Button className="min-h-11 rounded-none px-6 font-semibold" onClick={() => setCreating(true)}><Plus />New event</Button>
       </div>
 
       {events.isPending && <ListSkeleton />}
@@ -58,14 +56,14 @@ function Events() {
         <ul className="grid gap-4">
           {events.data.map((e) => (
             <li key={e.id}>
-              <Link to="/organizer/events/$id" params={{ id: e.id }} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <Card className="rounded-xl shadow-card transition-shadow hover:shadow-lift">
+              <Link to="/organizer/events/$id" params={{ id: e.id }} className="block rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Card className="rounded-none">
                   <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                     <div className="min-w-0 space-y-1.5">
-                      <h2 className="break-words font-display text-xl font-bold">{e.name}</h2>
+                      <h2 className="break-words text-xl font-medium">{e.name}</h2>
                       <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0 text-primary" />{formatDateRange(e.starts_at, e.ends_at)}</span>
-                        {e.venue && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 shrink-0 text-primary" />{e.venue}</span>}
+                        <span className="inline-flex items-center gap-1.5"><CalendarDays className="size-4 shrink-0 text-primary-text" />{formatDateRange(e.starts_at, e.ends_at)}</span>
+                        {e.venue && <span className="inline-flex items-center gap-1.5"><MapPin className="size-4 shrink-0 text-primary-text" />{e.venue}</span>}
                       </p>
                     </div>
                     <Badge variant="outline" className={`w-fit border-0 capitalize ${STATUS_STYLE[e.status]}`}>{e.status}</Badge>

@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, Copy, Share2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ErrorState, ListSkeleton, Spinner } from "@/components/page-state";
 import { RegistrationResultDialog } from "@/components/registration-result-dialog";
 import { RequireSignIn } from "@/components/require-sign-in";
@@ -28,10 +29,7 @@ export const Route = createFileRoute("/my/teams")({
 function Page() {
   return (
     <section>
-      <div className="mb-8 border-b border-border pb-6">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">EntriX / My teams</p>
-        <h1 className="font-display text-3xl font-extrabold md:text-4xl">My teams</h1>
-      </div>
+      <PageHeader title="My teams" />
       <RequireSignIn what="your teams"><Teams /></RequireSignIn>
     </section>
   );
@@ -45,7 +43,7 @@ function Teams() {
     return (
       <EmptyState icon={<Users className="size-6 text-muted-foreground" />} title="You are not in any team">
         <p className="mb-4">Create a team or join one with a code from an event's team category.</p>
-        <Button asChild className="min-h-11 rounded-full px-6 font-semibold"><Link to="/">Browse events</Link></Button>
+        <Button asChild className="min-h-11 rounded-none px-6 font-semibold"><Link to="/">Browse events</Link></Button>
       </EmptyState>
     );
   }
@@ -71,14 +69,14 @@ function InviteCode({ code, teamName }: { code: string; teamName: string }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/50 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-none bg-muted/50 p-4">
       <div>
         <p className="text-xs text-muted-foreground">Invite code</p>
-        <p className="select-all font-mono text-2xl font-bold tracking-widest" aria-label={`Invite code ${code.split("").join(" ")}`}>{code}</p>
+        <p className="select-all tabular-nums text-2xl font-bold tracking-widest" aria-label={`Invite code ${code.split("").join(" ")}`}>{code}</p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" className="min-h-11 rounded-full px-4" onClick={() => void copy()}>{copied ? <Check /> : <Copy />}{copied ? "Copied" : "Copy"}</Button>
-        {canShare && <Button variant="outline" className="min-h-11 rounded-full px-4" onClick={() => void share()}><Share2 />Share</Button>}
+        <Button variant="outline" className="min-h-11 rounded-none px-4" onClick={() => void copy()}>{copied ? <Check /> : <Copy />}{copied ? "Copied" : "Copy"}</Button>
+        {canShare && <Button variant="outline" className="min-h-11 rounded-none px-4" onClick={() => void share()}><Share2 />Share</Button>}
       </div>
     </div>
   );
@@ -131,16 +129,16 @@ function TeamCard({ team }: { team: MyTeam }) {
   const mutation = confirm === "leave" ? leave : cancel;
 
   return (
-    <Card className={`rounded-xl shadow-card ${team.status === "cancelled" ? "bg-muted/40" : ""}`}>
+    <Card className={`rounded-none ${team.status === "cancelled" ? "bg-muted/40" : ""}`}>
       <CardContent className="space-y-4 p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <Badge variant="outline" className={`border-0 ${team.status === "registered" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100" : "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100"}`}>
               {teamStatusLabel(team.status)}
             </Badge>
-            <h2 className="break-words font-display text-xl font-bold">{team.name}</h2>
+            <h2 className="break-words text-xl font-medium">{team.name}</h2>
             <p className="text-sm text-muted-foreground">
-              <Link to="/events/$id" params={{ id: team.event_id }} className="hover:text-primary hover:underline">{team.event_name}</Link> · {team.category_name}
+              <Link to="/events/$id" params={{ id: team.event_id }} className="hover:text-primary-text hover:underline">{team.event_name}</Link> · {team.category_name}
             </p>
           </div>
           <p className="text-sm font-semibold">{team.member_count} of {team.team_size_min}{team.team_size_max !== team.team_size_min ? ` to ${team.team_size_max}` : ""} players</p>
@@ -167,12 +165,12 @@ function TeamCard({ team }: { team: MyTeam }) {
         {(actions.canRegister || actions.canLeave || actions.canCancel) && (
           <div className="flex flex-col gap-2 sm:flex-row [&_button]:w-full sm:[&_button]:w-auto">
             {actions.canRegister && (
-              <Button className="min-h-11 rounded-full px-6 font-semibold" onClick={() => void onRegister()} disabled={register.pending}>
+              <Button className="min-h-11 rounded-none px-6 font-semibold" onClick={() => void onRegister()} disabled={register.pending}>
                 {register.pending ? <Spinner label="Registering..." /> : "Register team"}
               </Button>
             )}
-            {actions.canLeave && <Button variant="outline" className="min-h-11 rounded-full px-6" onClick={() => setConfirm("leave")}>Leave team</Button>}
-            {actions.canCancel && <Button variant="outline" className="min-h-11 rounded-full px-6" onClick={() => setConfirm("cancel")}>Cancel team</Button>}
+            {actions.canLeave && <Button variant="outline" className="min-h-11 rounded-none px-6" onClick={() => setConfirm("leave")}>Leave team</Button>}
+            {actions.canCancel && <Button variant="outline" className="min-h-11 rounded-none px-6" onClick={() => setConfirm("cancel")}>Cancel team</Button>}
           </div>
         )}
       </CardContent>

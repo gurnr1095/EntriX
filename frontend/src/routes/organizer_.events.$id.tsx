@@ -76,18 +76,18 @@ function Manager({ id }: { id: string }) {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-2">
           <Badge variant="outline" className={`border-0 capitalize ${STATUS_STYLE[e.status]}`}>{e.status}</Badge>
-          <h1 className="break-words font-display text-3xl font-extrabold md:text-4xl">{e.name}</h1>
+          <h1 className="break-words text-[clamp(2rem,6vw,4rem)] leading-[0.95]">{e.name}</h1>
           {e.status !== "draft" && (
-            <Link to="/events/$id" params={{ id }} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            <Link to="/events/$id" params={{ id }} className="inline-flex items-center gap-1.5 text-sm text-primary-text hover:underline">
               <ExternalLink className="size-4" />View public page
             </Link>
           )}
         </div>
         {next && (
-          <Button className="min-h-11 shrink-0 rounded-full px-6 font-semibold" variant={e.status === "draft" ? "default" : "outline"} onClick={() => setConfirmStep(true)}>
+          <Button className="min-h-11 shrink-0 rounded-none px-6 font-semibold" variant={e.status === "draft" ? "default" : "outline"} onClick={() => setConfirmStep(true)}>
             {nextStatusLabel(e.status)}
           </Button>
         )}
@@ -127,7 +127,7 @@ function Manager({ id }: { id: string }) {
 function Overview({ event }: { event: EventDetail }) {
   const qc = useQueryClient();
   return (
-    <Card className="max-w-2xl rounded-xl shadow-card">
+    <Card className="max-w-2xl rounded-none">
       <CardContent className="p-5 sm:p-6">
         <EventForm
           mode="edit"
@@ -164,7 +164,7 @@ function Categories({ event }: { event: EventDetail }) {
   return (
     <>
       <div className="mb-5 flex justify-end">
-        <Button className="min-h-11 rounded-full px-6 font-semibold" onClick={() => setDialog({})}><Plus />Add category</Button>
+        <Button className="min-h-11 rounded-none px-6 font-semibold" onClick={() => setDialog({})}><Plus />Add category</Button>
       </div>
       {event.categories.length === 0 ? (
         <EmptyState icon={<Users className="size-6 text-muted-foreground" />} title="No categories yet">
@@ -176,23 +176,23 @@ function Categories({ event }: { event: EventDetail }) {
             const pct = Math.min(100, Math.round((c.confirmed_count / c.capacity) * 100));
             return (
               <li key={c.id}>
-                <Card className="rounded-xl shadow-card">
+                <Card className="rounded-none">
                   <CardContent className="space-y-4 p-4 sm:p-6">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="break-words font-display text-lg font-bold">{c.name}</h3>
+                        <h3 className="break-words text-lg font-medium">{c.name}</h3>
                         <p className="text-sm text-muted-foreground">
                           <span className="capitalize">{c.sport.replace(/-/g, " ")}</span> ·{" "}
                           {c.participation === "team" ? `teams of ${c.team_size_min} to ${c.team_size_max}` : "individual"}
                         </p>
                       </div>
-                      <Button variant="outline" className="min-h-11 rounded-full px-5" onClick={() => setDialog({ category: c })}><Pencil />Edit</Button>
+                      <Button variant="outline" className="min-h-11 rounded-none px-5" onClick={() => setDialog({ category: c })}><Pencil />Edit</Button>
                     </div>
                     <div className="space-y-1.5">
                       <Progress value={pct} aria-label={`${pct}% full`} />
                       <p className="text-sm text-muted-foreground">{c.confirmed_count} of {c.capacity} {c.participation === "team" ? "teams" : "seats"} taken</p>
                     </div>
-                    <div className="flex items-center justify-between gap-4 rounded-xl bg-muted/50 px-4 py-3">
+                    <div className="flex items-center justify-between gap-4 rounded-none bg-muted/50 px-4 py-3">
                       <Label htmlFor={`wl-${c.id}`} className="text-sm">Waitlist when full</Label>
                       <Switch id={`wl-${c.id}`} checked={c.waitlist_enabled} disabled={toggle.isPending}
                         onCheckedChange={(on) => toggle.mutate({ c, on })} />
@@ -231,7 +231,7 @@ function Stats({ event }: { event: EventDetail }) {
     <div className="space-y-6">
       <dl className="grid grid-cols-3 gap-3 text-center">
         {([["Confirmed", total.confirmed], ["Waitlisted", total.waitlisted], ["Checked in", total.checked]] as const).map(([label, n]) => (
-          <div key={label} className="rounded-xl bg-muted/50 p-4">
+          <div key={label} className="rounded-none bg-muted/50 p-4">
             <dd className="font-display text-3xl font-extrabold">{n}</dd>
             <dt className="text-xs text-muted-foreground">{label}</dt>
           </div>
@@ -240,10 +240,10 @@ function Stats({ event }: { event: EventDetail }) {
       <ul className="grid gap-4">
         {rows.map((r) => (
           <li key={r.id}>
-            <Card className="rounded-xl shadow-card">
+            <Card className="rounded-none">
               <CardContent className="space-y-3 p-4 sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="font-display text-lg font-bold">{r.name}</h3>
+                  <h3 className="text-lg font-medium">{r.name}</h3>
                   <p className="text-sm text-muted-foreground">{r.confirmed} of {r.capacity} taken</p>
                 </div>
                 <Progress value={Math.min(100, Math.round((r.confirmed / r.capacity) * 100))} aria-label={`${r.name} fill level`} />
@@ -304,7 +304,7 @@ function Registrations({ event }: { event: EventDetail }) {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" className="min-h-11 rounded-full px-5" onClick={() => void csv()} disabled={downloading}>
+        <Button variant="outline" className="min-h-11 rounded-none px-5" onClick={() => void csv()} disabled={downloading}>
           {downloading ? <Spinner label="Preparing..." /> : <><Download />Download CSV</>}
         </Button>
       </div>
@@ -342,7 +342,7 @@ function Registrations({ event }: { event: EventDetail }) {
           <ul className="grid gap-3 md:hidden">
             {rows.map((r) => (
               <li key={r.registration_id}>
-                <Card className="rounded-xl shadow-card">
+                <Card className="rounded-none">
                   <CardContent className="space-y-1.5 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <p className="break-words font-semibold">{r.participant.name}</p>
@@ -361,7 +361,7 @@ function Registrations({ event }: { event: EventDetail }) {
 
       {list.hasNextPage && (
         <div className="flex justify-center">
-          <Button variant="outline" className="min-h-11 rounded-full px-6" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
+          <Button variant="outline" className="min-h-11 rounded-none px-6" onClick={() => void list.fetchNextPage()} disabled={list.isFetchingNextPage}>
             {list.isFetchingNextPage ? <Spinner label="Loading..." /> : "Load more"}
           </Button>
         </div>

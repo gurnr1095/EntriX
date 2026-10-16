@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,10 +23,7 @@ export const Route = createFileRoute("/me")({
 function Page() {
   return (
     <section>
-      <div className="mb-8 border-b border-border pb-6">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">EntriX / My profile</p>
-        <h1 className="font-display text-3xl font-extrabold md:text-4xl">My profile</h1>
-      </div>
+      <PageHeader title="My profile" />
       <RequireSignIn what="your profile">
         <ProfileForm />
       </RequireSignIn>
@@ -70,7 +68,7 @@ function ProfileForm() {
   if (me.isError) return <ErrorState error={me.error} onRetry={() => void me.refetch()} />;
 
   return (
-    <Card className="max-w-xl rounded-xl shadow-card">
+    <Card className="max-w-xl rounded-none">
       <CardContent className="p-5 sm:p-6">
         <form onSubmit={submit} className="space-y-5" noValidate>
           <div className="space-y-2">
@@ -97,7 +95,7 @@ function ProfileForm() {
               <Input id="phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
             </div>
           </div>
-          <Button type="submit" className="min-h-11 rounded-full px-6 font-semibold" disabled={save.isPending}>
+          <Button type="submit" className="min-h-11 rounded-none px-6 font-semibold" disabled={save.isPending}>
             {save.isPending ? <Spinner label="Saving..." /> : "Save profile"}
           </Button>
         </form>

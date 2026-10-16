@@ -80,33 +80,40 @@ export function CategoryCard({ category, window }: { category: Category; window:
   const level = pct >= 90 ? "urgent" : pct >= 65 ? "warm" : "calm";
   const barCls = level === "urgent" ? "bg-destructive/15 [&>div]:bg-destructive" : level === "warm" ? "bg-warning/20 [&>div]:bg-warning" : "bg-success/15 [&>div]:bg-success";
   const muted = action === "closed" || action === "full" || action === "not_open_yet";
+  const seats = Math.max(category.seats_left, 0);
+  const unit = category.participation === "team" ? "places left" : "seats left";
 
   return (
-    <Card className={`overflow-hidden rounded-xl shadow-card transition-shadow duration-200 hover:shadow-lift ${muted ? "bg-muted/40" : ""}`}>
-      <CardContent className="flex flex-col gap-5 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:p-6">
-        <div className="min-w-0 flex-1 space-y-3">
+    <Card className={muted ? "opacity-90" : ""}>
+      <CardContent className="grid gap-6 p-5 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-10 md:p-7">
+        <div className="min-w-0 space-y-3">
           <div>
-            <div className="flex flex-wrap items-center gap-2"><h3 className="break-words font-display text-lg font-bold">{category.name}</h3>{action === "full" && <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-destructive">Full</span>}{action === "waitlist" && <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-warning-foreground">Waitlist</span>}{action === "closed" && <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Closed</span>}</div>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="break-words text-2xl font-medium">{category.name}</h3>
+            <p className="text-base text-muted-foreground">
               <span className="capitalize">{category.sport.replace(/-/g, " ")}</span> ·{" "}
               {category.participation === "team" ? `team of ${category.team_size_min} to ${category.team_size_max}` : "individual"}
             </p>
           </div>
-          <Progress value={pct} aria-label={`${pct}% full`} className={`h-2.5 ${barCls} [&>div]:duration-500`} />
-          <p className={`text-sm font-semibold ${level === "urgent" ? "text-destructive" : level === "warm" ? "text-warning-foreground" : "text-success-foreground"}`}>
-            {seatsLabel(category)}
-            {category.seats_left <= 0 && category.waitlist_enabled ? " · waitlist open" : ""}
+          <Progress value={pct} aria-label={`${pct}% full`} className={`h-2 ${barCls} [&>div]:duration-500`} />
+        </div>
+
+        {/* The seat count is the loudest thing in the row: it is what people are racing for. */}
+        <div className="md:text-right" aria-live="polite">
+          <p className={`font-display text-[clamp(3.25rem,9vw,5.5rem)] leading-none tabular-nums ${level === "urgent" && seats > 0 ? "text-destructive" : seats === 0 ? "text-muted-foreground" : ""}`}>{seats}</p>
+          <p className="text-base font-medium">
+            {unit}
+            {seats === 0 && category.waitlist_enabled ? ", waitlist open" : ""}
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 sm:items-end [&_button]:w-full sm:[&_button]:w-auto">
-          {action === "not_open_yet" && <Button disabled variant="secondary" className="min-h-11 rounded-full">Registration not open yet</Button>}
-          {action === "closed" && <Button disabled variant="secondary" className="min-h-11 rounded-full">Registration closed</Button>}
-          {action === "full" && <Button disabled variant="secondary" className="min-h-11 rounded-full">Full</Button>}
+        <div className="flex shrink-0 flex-col gap-2 md:items-end [&_button]:w-full md:[&_button]:w-auto">
+          {action === "not_open_yet" && <Button disabled variant="secondary" className="min-h-12">Registration not open yet</Button>}
+          {action === "closed" && <Button disabled variant="secondary" className="min-h-12">Registration closed</Button>}
+          {action === "full" && <Button disabled variant="secondary" className="min-h-12">Full</Button>}
 
           {(action === "register" || action === "waitlist") &&
             (isSignedIn ? (
-              <Button onClick={onRegister} disabled={register.pending || cooling} className="min-h-11 rounded-full px-6 font-semibold shadow-lift">
+              <Button onClick={onRegister} disabled={register.pending || cooling} className="min-h-12 px-8 text-base font-semibold">
                 {register.pending ? (
                   <Spinner label="Registering..." />
                 ) : cooling ? (
@@ -118,17 +125,17 @@ export function CategoryCard({ category, window }: { category: Category; window:
                 )}
               </Button>
             ) : (
-              <SignInButton mode="modal"><Button className="min-h-11 rounded-full px-6 font-semibold shadow-lift">Sign in to register</Button></SignInButton>
+              <SignInButton mode="modal"><Button className="min-h-12 px-8 text-base font-semibold">Sign in to register</Button></SignInButton>
             ))}
 
           {action === "team" &&
             (isSignedIn ? (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button className="min-h-11 rounded-full px-6 font-semibold shadow-lift" onClick={() => setTeamDialog("create")}>Create team</Button>
-                <Button className="min-h-11 rounded-full px-6 font-semibold" variant="outline" onClick={() => setTeamDialog("join")}>Join with code</Button>
+              <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+                <Button className="min-h-12 px-8 text-base font-semibold" onClick={() => setTeamDialog("create")}>Create team</Button>
+                <Button className="min-h-12 px-8 text-base font-semibold" variant="outline" onClick={() => setTeamDialog("join")}>Join with code</Button>
               </div>
             ) : (
-              <SignInButton mode="modal"><Button className="min-h-11 rounded-full px-6 font-semibold shadow-lift">Sign in to join</Button></SignInButton>
+              <SignInButton mode="modal"><Button className="min-h-12 px-8 text-base font-semibold">Sign in to join</Button></SignInButton>
             ))}
         </div>
       </CardContent>

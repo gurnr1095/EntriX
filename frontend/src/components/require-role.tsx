@@ -18,7 +18,7 @@ export function RequireRole({ roles, children }: { roles: readonly Role[]; child
     return (
       <EmptyState icon={<ShieldAlert className="size-6 text-muted-foreground" />} title="This page is for event staff">
         <p className="mb-4">Your account does not have access. Ask an organizer if you should.</p>
-        <Button asChild className="min-h-11 rounded-full px-6 font-semibold"><Link to="/">Back to events</Link></Button>
+        <Button asChild className="min-h-11 rounded-none px-6 font-semibold"><Link to="/">Back to events</Link></Button>
       </EmptyState>
     );
   }

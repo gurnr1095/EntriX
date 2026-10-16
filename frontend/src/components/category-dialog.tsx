@@ -134,7 +134,7 @@ export function CategoryDialog({ open, onOpenChange, eventId, category, onSaved 
             <Label htmlFor="cat-cap">{v.participation === "team" ? "Number of teams allowed" : "Seats"}</Label>
             <Input id="cat-cap" inputMode="numeric" value={v.capacity} onChange={(e) => set("capacity")(e.target.value)} />
           </div>
-          <div className="flex items-center justify-between gap-4 rounded-xl bg-muted/50 p-4">
+          <div className="flex items-center justify-between gap-4 rounded-none bg-muted/50 p-4">
             <div>
               <Label htmlFor="cat-wl">Waitlist</Label>
               <p className="text-xs text-muted-foreground">When full, let people queue for a seat.</p>
@@ -142,7 +142,7 @@ export function CategoryDialog({ open, onOpenChange, eventId, category, onSaved 
             <Switch id="cat-wl" checked={waitlist} onCheckedChange={setWaitlist} />
           </div>
           {problem && <p role="alert" className="text-sm font-medium text-destructive">{problem}</p>}
-          <Button type="submit" className="min-h-11 w-full rounded-full font-semibold" disabled={pending}>
+          <Button type="submit" className="min-h-11 w-full rounded-none font-semibold" disabled={pending}>
             {pending ? <Spinner label="Saving..." /> : editing ? "Save changes" : "Add category"}
           </Button>
         </form>

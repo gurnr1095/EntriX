@@ -10,7 +10,7 @@ export function RegistrationResultDialog({ result, onClose }: { result: Registra
     <Dialog open={result !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent>
         <DialogHeader>
-          <div className={`mx-auto mb-2 flex size-14 items-center justify-center rounded-full ${waitlisted ? "bg-amber-100 dark:bg-amber-900/40" : "bg-emerald-100 dark:bg-emerald-900/40"}`}>
+          <div className={`mx-auto mb-2 flex size-14 items-center justify-center rounded-none ${waitlisted ? "bg-amber-100 dark:bg-amber-900/40" : "bg-emerald-100 dark:bg-emerald-900/40"}`}>
             {waitlisted ? <Clock className="size-7 text-amber-700 dark:text-amber-200" /> : <CheckCircle2 className="size-7 text-emerald-700 dark:text-emerald-200" />}
           </div>
           <DialogTitle className="text-center">{waitlisted ? "You are on the waitlist" : "You are in!"}</DialogTitle>

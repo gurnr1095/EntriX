@@ -1,8 +1,8 @@
+import type { CSSProperties } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CalendarDays, Clock, MapPin } from "lucide-react";
 import { CategoryCard } from "@/components/category-card";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/page-state";
-import { WindowBadge } from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/errors";
 import { formatDateRange, formatDateTime, registrationWindow } from "@/lib/format";
@@ -20,7 +20,7 @@ function Page() {
 
   return (
     <section>
-      <Link to="/" className="mb-5 inline-flex min-h-11 items-center gap-1.5 rounded-full pr-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Link to="/" className="mb-5 inline-flex min-h-11 items-center gap-1.5 pr-3 text-base font-medium hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <ArrowLeft className="size-4" />All events
       </Link>
 
@@ -50,30 +50,30 @@ function EventView({ event }: { event: NonNullable<ReturnType<typeof useEvent>["
   const window = registrationWindow(event);
   return (
     <>
-      <div className="relative mb-8 overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card sm:p-8">
-        <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary-soft blur-2xl" />
-        <div className="relative">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <WindowBadge window={window} opensLabel={`Opens ${formatDateTime(event.reg_opens_at)}`} />
-          </div>
-          <h1 className="break-words font-display text-3xl font-extrabold md:text-5xl">{event.name}</h1>
-          <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <div className="flex min-w-0 items-start gap-2.5"><CalendarDays className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">When</dt><dd className="font-medium">{formatDateRange(event.starts_at, event.ends_at)}</dd></div></div>
-            {event.venue && <div className="flex min-w-0 items-start gap-2.5"><MapPin className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Where</dt><dd className="break-words font-medium">{event.venue}</dd></div></div>}
-            <div className="flex min-w-0 items-start gap-2.5"><Clock className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Registration</dt><dd className="font-medium">{formatDateTime(event.reg_opens_at)} to {formatDateTime(event.reg_closes_at)}</dd></div></div>
+      {/* The event is the poster: its name on a flat red field, the facts under it in plain text. */}
+      <div className="bleed field-dark -mt-2 mb-12 md:mb-16">
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 md:px-8 md:pb-14 md:pt-12">
+          <p className="rise mb-6 inline-block bg-primary px-3 py-1.5 text-base font-medium text-primary-foreground">
+            {window === "open" ? "Registration open" : window === "upcoming" ? `Opens ${formatDateTime(event.reg_opens_at)}` : "Registration closed"}
+          </p>
+          <h1 className="rise break-words text-[clamp(2.25rem,7.5vw,6rem)] leading-[0.92]" style={{ "--i": 1 } as CSSProperties}>{event.name}</h1>
+          <dl className="mt-8 grid gap-5 text-lg md:grid-cols-3">
+            <div className="rise flex min-w-0 items-start gap-3" style={{ "--i": 2 } as CSSProperties}><CalendarDays className="mt-1 size-5 shrink-0" /><div className="min-w-0"><dt className="text-base opacity-80">When</dt><dd className="font-medium">{formatDateRange(event.starts_at, event.ends_at)}</dd></div></div>
+            {event.venue && <div className="rise flex min-w-0 items-start gap-3" style={{ "--i": 3 } as CSSProperties}><MapPin className="mt-1 size-5 shrink-0" /><div className="min-w-0"><dt className="text-base opacity-80">Where</dt><dd className="break-words font-medium">{event.venue}</dd></div></div>}
+            <div className="rise flex min-w-0 items-start gap-3" style={{ "--i": 4 } as CSSProperties}><Clock className="mt-1 size-5 shrink-0" /><div className="min-w-0"><dt className="text-base opacity-80">Registration</dt><dd className="font-medium">{formatDateTime(event.reg_opens_at)} to {formatDateTime(event.reg_closes_at)}</dd></div></div>
           </dl>
-          {event.description && <p className="mt-6 max-w-3xl whitespace-pre-line border-t border-border pt-5 text-sm leading-relaxed text-muted-foreground sm:text-base">{event.description}</p>}
+          {event.description && <p className="rise mt-8 max-w-3xl whitespace-pre-line text-lg leading-relaxed" style={{ "--i": 5 } as CSSProperties}>{event.description}</p>}
         </div>
       </div>
 
-      <h2 className="mb-4 font-display text-xl font-bold">Categories</h2>
+      <h2 className="mb-6 text-[clamp(1.75rem,4.5vw,3.25rem)]">Pick your sport</h2>
       {event.categories.length === 0 ? (
         <EmptyState icon={<CalendarDays className="size-6 text-muted-foreground" />} title="No categories yet">
           The organizers have not added any sports to this event.
         </EmptyState>
       ) : (
-        <div className="space-y-4">
-          {event.categories.map((c) => <CategoryCard key={c.id} category={c} window={window} />)}
+        <div className="grid gap-2">
+          {event.categories.map((c, i) => <div key={c.id} className="rise" style={{ "--i": i } as CSSProperties}><CategoryCard category={c} window={window} /></div>)}
         </div>
       )}
     </>
