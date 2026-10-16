@@ -140,16 +140,18 @@ const MESSAGES: Record<string, string> = {
   http_error: "Something went wrong. Please try again.",
 };
 
+const FALLBACK = "Something went wrong. Please try again.";
+
 export function messageFor(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 429) {
       return error.retryAfter ? `Too many attempts. Try again in ${error.retryAfter} seconds.`
-                              : MESSAGES.rate_limited;
+                              : (MESSAGES["rate_limited"] ?? FALLBACK);
     }
     if (error.code === "validation_error" && error.message) return error.message;
-    return MESSAGES[error.code] ?? (error.status >= 500 ? MESSAGES.http_error : error.message);
+    return MESSAGES[error.code] ?? (error.status >= 500 ? FALLBACK : error.message);
   }
-  return MESSAGES.http_error;
+  return FALLBACK;
 }
 ```
 
@@ -168,7 +170,7 @@ export function setTokenGetter(fn: TokenGetter) { getToken = fn; }
 type SlowListener = (slow: boolean) => void;
 const slowListeners = new Set<SlowListener>();
 let slowCount = 0;
-export function onServerSlow(fn: SlowListener) { slowListeners.add(fn); return () => slowListeners.delete(fn); }
+export function onServerSlow(fn: SlowListener) { slowListeners.add(fn); return () => { slowListeners.delete(fn); }; }
 function setSlow(delta: number) {
   slowCount += delta;
   slowListeners.forEach((l) => l(slowCount > 0));
@@ -198,7 +200,7 @@ async function attempt(method: string, path: string, o: Opts, forceFresh: boolea
   try {
     return await fetch(config.apiUrl + path, {
       method, headers, signal: ctl.signal,
-      body: o.body !== undefined ? JSON.stringify(o.body) : undefined,
+      ...(o.body !== undefined ? { body: JSON.stringify(o.body) } : {}),
     });
   } finally { clearTimeout(timer); }
 }
