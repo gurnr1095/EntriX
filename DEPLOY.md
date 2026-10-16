@@ -202,6 +202,9 @@ anything a visitor sends lands on the left. So the visitor is the **3rd entry fr
 internal address, so the whole site shared one "60 requests a minute" limit; `2` picks a Cloudflare
 address. Both are pinned as wrong in `tests/test_proxy_hops.py`.)
 
+**Confirmed after setting 3:** a repeat check on the live service logged an `ip=` equal to the
+tester's own public address (compared with `api.ipify.org`).
+
 To re-check after any change of hosting:
 1. Get a token (section 3b) and send more than 10 registration requests within a minute (the loop in
    the test page instructions); the later ones return `429`.
