@@ -15,6 +15,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthBridge } from "@/lib/auth-bridge";
 import { ServerWakingBanner } from "@/components/server-waking-banner";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -96,6 +97,7 @@ function RootComponent() {
         <AuthBridge />
         <ServerWakingBanner />
         <AppShell><Outlet /></AppShell>
+        <Toaster position="top-center" richColors />
       </ClerkProvider>
     </QueryClientProvider>
   );
