@@ -261,6 +261,7 @@ warning at the top of that file), then use *New, Blueprint* and set the file pat
 | `DATABASE_URL` | local | `postgres://` and `postgresql://` URLs, `sslmode` and `channel_binding` are handled |
 | `RUN_MIGRATIONS_ON_START` | false | container applies migrations before serving; for hosts with no pre-deploy step |
 | `RUN_WORKER_IN_API` | false | run the email worker inside the API process |
+| `CORS_ALLOW_ORIGINS`, `CORS_ALLOW_ORIGIN_REGEX` | empty | browser origins allowed to call the API (comma list, and a regex for hosts whose URLs change). Empty sends no CORS headers; the Blueprint sets the regex for `*.lovable.app` |
 | `OUTBOX_POLL_SECONDS`, `OUTBOX_IDLE_POLL_SECONDS` | 2, 2 | longest idle sleep; free tier uses 3600 (a new registration wakes the worker at once) |
 | `OUTBOX_MAX_ATTEMPTS` | 8 | real failures only; quota and credential errors do not count |
 | `EMAIL_BACKEND` | `smtp` | `brevo` sends over HTTPS |

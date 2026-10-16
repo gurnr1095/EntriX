@@ -240,6 +240,30 @@ class MyRegistrationOut(BaseModel):
     status: RegistrationStatus
     waitlist_position: int | None
     created_at: datetime
+    event_id: uuid.UUID
+    event_name: str
+    event_starts_at: datetime
+    venue: str | None
+    category_name: str
+    sport: str
+    team_id: uuid.UUID | None
+    team_name: str | None
+
+
+class MyTeamOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    status: TeamStatus
+    category_id: uuid.UUID
+    category_name: str
+    event_id: uuid.UUID
+    event_name: str
+    captain_id: uuid.UUID
+    invite_code: str | None = Field(default=None, description="Captain only")
+    member_count: int
+    team_size_min: int
+    team_size_max: int
+    is_captain: bool
 
 
 class MyRegistrationPage(BaseModel):

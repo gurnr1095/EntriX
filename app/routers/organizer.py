@@ -12,9 +12,11 @@ from app.db import SessionLocal, get_session
 from app.deps import CurrentUser, require_organizer
 from app.errors import AppError
 from app.models import Category, Event, Registration, RegistrationStatus, Team, User
-from app.routers.events import decode_cursor, encode_cursor
+from app.routers.events import category_out, decode_cursor, encode_cursor
 from app.schemas import (
     CategoryStats,
+    EventDetail,
+    EventOut,
     EventStats,
     ParticipantOut,
     RegistrationRow,
@@ -218,4 +220,35 @@ async def event_stats(
             )
             for r in rows
         ]
+    )
+
+
+# Organizers must see events the public cannot (drafts, closed). These are never cached, so a
+# draft cannot leak through the shared public cache.
+@router.get("/organizer/events", response_model=list[EventOut])
+async def organizer_events(
+    _: CurrentUser = Depends(require_organizer),
+    session: AsyncSession = Depends(get_session),
+) -> list[EventOut]:
+    rows = (
+        await session.scalars(select(Event).order_by(Event.starts_at.desc(), Event.id))
+    ).all()
+    return [EventOut.model_validate(e) for e in rows]
+
+
+@router.get("/organizer/events/{event_id}", response_model=EventDetail)
+async def organizer_event(
+    event_id: uuid.UUID,
+    _: CurrentUser = Depends(require_organizer),
+    session: AsyncSession = Depends(get_session),
+) -> EventDetail:
+    event = await _require_event(session, event_id)
+    categories = (
+        await session.scalars(
+            select(Category).where(Category.event_id == event_id).order_by(Category.name)
+        )
+    ).all()
+    return EventDetail(
+        **EventOut.model_validate(event).model_dump(),
+        categories=[category_out(c) for c in categories],
     )

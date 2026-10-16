@@ -317,3 +317,11 @@ It is safe against forged headers: a visitor can only add entries on the left; t
 All of this is pinned in `tests/test_proxy_hops.py` using the observed header, including the two wrong values. `render.yaml` now sets 3 as the default.
 Verified live with `TRUSTED_PROXY_HOPS=3`: the logged `ip=` matched the tester's own public address.
 The logging added earlier for exactly this purpose (`rate limited ... ip=... x_forwarded_for=...`) is what made this a five-minute diagnosis instead of a guess.
+
+### 57. M6a: the API changes a browser client needed
+Reading every router for the frontend found gaps that no amount of client code could work around.
+- **CORS** (`CORS_ALLOW_ORIGINS`, `CORS_ALLOW_ORIGIN_REGEX`): off unless configured. Allowed headers are exactly `Authorization`, `Content-Type`, `Idempotency-Key`; exposed ones are `Retry-After`, `Content-Disposition`, `X-Cache` (without these the client could not read the 429 wait time or the CSV name). No credentials: auth is a bearer token, so CORS is a convenience, not the security boundary. Error responses carry the headers too (tested), otherwise the browser reports only "network error". Known limit: an unhandled 500 and Render's cold-start page come from outside the middleware and have no CORS headers, so the client must treat a network failure on a POST as outcome-unknown and retry with the same idempotency key.
+- **`GET /me/registrations`** gained event, category, sport, venue and team names, so the page needs no per-event lookups. Fields were added, none removed.
+- **`GET /me/teams`**: a forming team has no registration, so a captain who reloaded the page lost the team and its invite code. Cancelled teams are hidden; only the captain sees the code.
+- **`GET /organizer/events` and `/organizer/events/{id}`**: drafts are invisible on the public endpoints. These are uncached on purpose, and a test checks that reading a draft as organizer does not make it public.
+Tests: `tests/test_m6a_frontend_api.py` (12). Suite: 324 passed.

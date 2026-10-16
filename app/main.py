@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings, validate_startup
 from app.errors import register_error_handlers
@@ -56,6 +57,16 @@ def create_app() -> FastAPI:
         )
     app = FastAPI(title="EntriX", lifespan=lifespan)
     register_error_handlers(app)
+    if settings.cors_origins() or settings.cors_allow_origin_regex:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origins(),
+            allow_origin_regex=settings.cors_allow_origin_regex or None,
+            allow_methods=["GET", "POST", "PATCH", "DELETE"],
+            allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
+            expose_headers=["Retry-After", "Content-Disposition", "X-Cache"],
+            max_age=600,
+        )
     for module in (health, me, events, categories, registrations, checkin, teams, organizer):
         app.include_router(module.router)
     return app

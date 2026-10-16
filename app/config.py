@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     cache_enabled: bool = True
     cache_ttl_seconds: int = 3
 
+    # Browser origins allowed to call the API, comma separated (https://app.example.com). The
+    # regex form covers hosts whose preview URLs change (e.g. https://.*\.lovable\.app). Empty
+    # means no CORS headers. Credentials are never allowed: auth is a bearer token, not a cookie.
+    cors_allow_origins: str = ""
+    cors_allow_origin_regex: str = ""
+
     qr_secret: str = "change-me"
     smtp_host: str = "localhost"
     smtp_port: int = 1025
@@ -82,6 +88,9 @@ class Settings(BaseSettings):
         if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
             value = value[1:-1].strip()
         return value
+
+    def cors_origins(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.cors_allow_origins.split(",") if o.strip()]
 
     def sender_header(self) -> str:
         """The value for the From header: `Name <address>`, or just the address.

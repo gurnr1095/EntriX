@@ -41,6 +41,13 @@ services:
       # visitor share one address; see DEPLOY.md section 4.)
       - key: TRUSTED_PROXY_HOPS
         value: "3"
+      # Which browser origins may call the API. The regex covers Lovable's preview and published
+      # hosts; once the site has a final address, add it to CORS_ALLOW_ORIGINS (comma separated).
+      # Auth is a bearer token, not a cookie, so CORS is not a security boundary here.
+      - key: CORS_ALLOW_ORIGIN_REGEX
+        value: 'https://[a-z0-9-]+\.(lovable\.app|lovableproject\.com)'
+      - key: CORS_ALLOW_ORIGINS
+        value: ""
       - key: RUN_WORKER_IN_API
         value: "true"
       - key: RUN_MIGRATIONS_ON_START
