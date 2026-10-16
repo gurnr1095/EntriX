@@ -79,9 +79,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 md:px-8 md:pt-10">{children}</main>
 
       <footer className="safe-bottom-space field-dark">
-        <div className="mx-auto max-w-6xl px-4 pb-8 pt-12 md:px-8 md:pt-16">
-          <p aria-hidden className="font-display text-[clamp(2.75rem,15vw,13rem)] leading-[0.85] text-field-accent">EntriX</p>
-          <p className="mt-8 max-w-md text-lg">Pick your sport, grab a seat, show your pass at the gate.</p>
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 md:px-8 md:pt-14">
+          <p aria-hidden className="whitespace-nowrap font-display text-[clamp(2rem,12vw,9.25rem)] leading-[0.9] text-field-accent">EntriX</p>
+          <p className="mt-6 max-w-md text-lg">Pick your sport, grab a seat, show your pass at the gate.</p>
         </div>
       </footer>
 
