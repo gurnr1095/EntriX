@@ -19,3 +19,11 @@ export function WindowBadge({ window, opensLabel }: { window: RegWindow; opensLa
   if (window === "upcoming") return <Badge variant="outline">{opensLabel}</Badge>;
   return <Badge variant="outline" className="text-muted-foreground">Registration closed</Badge>;
 }
+
+import type { EventStatus } from "@/types";
+
+export const STATUS_STYLE: Record<EventStatus, string> = {
+  draft: "bg-muted text-muted-foreground",
+  published: "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100",
+  closed: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100",
+};

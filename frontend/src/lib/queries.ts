@@ -31,3 +31,10 @@ export function useMyRegistrations(enabled: boolean) {
     enabled,
   });
 }
+
+export const orgKeys = {
+  events: ["org-events"] as const,
+  event: (id: string) => ["org-event", id] as const,
+  stats: (id: string) => ["org-stats", id] as const,
+  regs: (id: string, category: string, status: string) => ["org-regs", id, category, status] as const,
+};
