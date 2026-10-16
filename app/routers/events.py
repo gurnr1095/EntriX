@@ -4,14 +4,14 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, Response
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.deps import CurrentUser, require_organizer
 from app.errors import AppError
-from app.models import Category, Event, EventStatus
+from app.models import Category, Event, EventStatus, Registration
 from app.schemas import (
     CategoryCreate,
     CategoryOut,
@@ -173,6 +173,55 @@ async def patch_event(
             event.status = new_status
     await cache.cache_delete(cache.event_key(event_id))
     return event
+
+
+@router.delete("/events/{event_id}", status_code=204)
+async def delete_event(
+    event_id: uuid.UUID,
+    _: CurrentUser = Depends(require_organizer),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    """Delete an event, its categories and any forming teams, but only if nobody has registered.
+
+    Registrations are people's history (and what check-in and the CSV rely on), so an event that
+    has any is closed, never deleted. The categories are locked first, exactly as a registration
+    locks its category, so a registration cannot slip in between the check and the delete.
+    """
+    try:
+        async with session.begin():
+            event = await session.get(Event, event_id, with_for_update=True)
+            if event is None:
+                raise AppError(404, "not_found", "Event not found")
+            category_ids = (
+                await session.scalars(
+                    select(Category.id).where(Category.event_id == event_id).with_for_update()
+                )
+            ).all()
+            registered = 0
+            if category_ids:
+                registered = (
+                    await session.scalar(
+                        select(func.count())
+                        .select_from(Registration)
+                        .where(Registration.category_id.in_(category_ids))
+                    )
+                ) or 0
+            if registered:
+                raise AppError(
+                    409,
+                    "event_has_registrations",
+                    "This event has registrations, so it cannot be deleted. Close it instead.",
+                )
+            # Categories, teams and team members go with it (ON DELETE CASCADE).
+            await session.execute(delete(Event).where(Event.id == event_id))
+    except IntegrityError as exc:  # a registration that committed in the instant after the check
+        raise AppError(
+            409,
+            "event_has_registrations",
+            "This event has registrations, so it cannot be deleted. Close it instead.",
+        ) from exc
+    await cache.cache_delete(cache.event_key(event_id))
+    return Response(status_code=204)
 
 
 @router.post("/events/{event_id}/categories", response_model=CategoryOut, status_code=201)

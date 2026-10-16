@@ -275,3 +275,7 @@ warning at the top of that file), then use *New, Blueprint* and set the file pat
 | `CACHE_ENABLED`, `CACHE_TTL_SECONDS` | true, 3 | browse-page cache |
 | `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` | 20, 20 | per process; `render.yaml` uses 5 and 5 |
 | `WEB_CONCURRENCY` | 1 | **must stay 1** without Redis: each process would keep its own counters |
+
+## 6. Sample data for a demo
+
+`scripts/sample_data.sql` fills the live database with four sample events (open, closed with check-ins, opening soon, draft), 60 sample students, registrations, a full category with a waitlist and teams, all consistent with the five invariants (checked on a scratch database before release). Run it once in the Neon SQL editor after setting your organizer e-mail on its first lines. It queues no e-mails. The sample students use `@example.test` addresses and appear in the organizer's registrations list and CSV, so remove them before a real event: run `scripts/sample_data_remove.sql` (it deletes only rows slugged `sample-` or with an auth id starting `sample|`).

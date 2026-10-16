@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, ExternalLink, Pencil, Plus, Users } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { CategoryDialog } from "@/components/category-dialog";
 import { EventForm } from "@/components/event-form";
@@ -65,6 +65,21 @@ function Manager({ id }: { id: string }) {
     onSettled: () => setConfirmStep(false),
   });
 
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const remove = useMutation({
+    mutationFn: () => api.deleteEvent(id),
+    onSuccess: async () => {
+      toast.success("Event deleted.");
+      void qc.invalidateQueries({ queryKey: orgKeys.events });
+      void qc.invalidateQueries({ queryKey: ["events"] });
+      qc.removeQueries({ queryKey: orgKeys.event(id) });
+      await navigate({ to: "/organizer" });
+    },
+    onError: (e) => toast.error(messageFor(e)),
+    onSettled: () => setConfirmDelete(false),
+  });
+
   if (event.isPending) return <ListSkeleton rows={2} />;
   if (event.isError) {
     return event.error instanceof ApiError && event.error.status === 404
@@ -86,11 +101,16 @@ function Manager({ id }: { id: string }) {
             </Link>
           )}
         </div>
-        {next && (
-          <Button className="min-h-11 shrink-0 rounded-none px-6 font-semibold" variant={e.status === "draft" ? "default" : "outline"} onClick={() => setConfirmStep(true)}>
-            {nextStatusLabel(e.status)}
+        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+          {next && (
+            <Button className="min-h-11 px-6 font-semibold" variant={e.status === "draft" ? "default" : "outline"} onClick={() => setConfirmStep(true)}>
+              {nextStatusLabel(e.status)}
+            </Button>
+          )}
+          <Button variant="outline" className="min-h-11 px-6 text-destructive" onClick={() => setConfirmDelete(true)}>
+            <Trash2 />Delete event
           </Button>
-        )}
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
@@ -105,6 +125,24 @@ function Manager({ id }: { id: string }) {
         <TabsContent value="stats"><Stats event={e} /></TabsContent>
         <TabsContent value="registrations"><Registrations event={e} /></TabsContent>
       </Tabs>
+
+      <AlertDialog open={confirmDelete} onOpenChange={(o) => { if (!o && !remove.isPending) setConfirmDelete(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {e.name} and its categories will be removed for good. This only works while nobody has registered;
+              once people have, close the event instead.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={remove.isPending}>Keep it</AlertDialogCancel>
+            <AlertDialogAction disabled={remove.isPending} onClick={(ev) => { ev.preventDefault(); remove.mutate(); }}>
+              {remove.isPending ? <Spinner label="Deleting..." /> : "Delete event"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={confirmStep} onOpenChange={(o) => { if (!o && !step.isPending) setConfirmStep(false); }}>
         <AlertDialogContent>

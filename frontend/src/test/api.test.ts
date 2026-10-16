@@ -114,3 +114,19 @@ describe("messages", () => {
     expect(messageFor(new ApiError(500, "weird", "x"))).toMatch(/something went wrong/i);
   });
 });
+
+describe("deleting an event", () => {
+  it("sends DELETE and accepts an empty 204 reply", async () => {
+    script = [new Response(null, { status: 204 })];
+    expect(await run(api.deleteEvent("e1"))).toBeUndefined();
+    expect(calls[0]?.url).toMatch(/\/events\/e1$/);
+    expect(calls[0]?.init.method).toBe("DELETE");
+  });
+  it("explains in words when the event already has registrations, and does not retry", async () => {
+    script = [err(409, "event_has_registrations")];
+    const e = (await run(api.deleteEvent("e1"))) as ApiError;
+    expect(e.code).toBe("event_has_registrations");
+    expect(messageFor(e)).toMatch(/Close it instead/);
+    expect(calls).toHaveLength(1);
+  });
+});

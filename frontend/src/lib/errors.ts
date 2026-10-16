@@ -28,6 +28,7 @@ const MESSAGES: Record<string, string> = {
   not_confirmed: "This registration is cancelled or on the waitlist, so it cannot be checked in.",
   wrong_event:"This QR code belongs to a different event.",
   invalid_token: "That QR code is not valid.",
+  event_has_registrations: "This event has registrations, so it cannot be deleted. Close it instead.",
   slug_taken: "That web address (slug) is already used. Choose another.",
   category_name_taken: "A category with that name already exists in this event.",
   capacity_below_confirmed: "Capacity cannot be lower than the number already confirmed.",

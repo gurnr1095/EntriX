@@ -133,6 +133,8 @@ export const api = {
   orgEvent: (id: string) => request<T.EventDetail>("GET", `/organizer/events/${id}`),
   createEvent: (b: T.EventCreate) => request<T.EventOut>("POST", "/events", { body: b }),
   patchEvent: (id: string, b: T.EventPatch) => request<T.EventOut>("PATCH", `/events/${id}`, { body: b }),
+  /** Only allowed while nobody has registered; the server answers 409 event_has_registrations otherwise. */
+  deleteEvent: (id: string) => request<void>("DELETE", `/events/${id}`),
   createCategory: (eventId: string, b: T.CategoryCreate) =>
     request<T.Category>("POST", `/events/${eventId}/categories`, { body: b }),
   patchCategory: (id: string, b: T.CategoryPatch) =>
