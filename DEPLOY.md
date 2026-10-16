@@ -279,3 +279,42 @@ warning at the top of that file), then use *New, Blueprint* and set the file pat
 ## 6. Sample data for a demo
 
 `scripts/sample_data.sql` fills the live database with four sample events (open, closed with check-ins, opening soon, draft), 60 sample students, registrations, a full category with a waitlist and teams, all consistent with the five invariants (checked on a scratch database before release). Run it once in the Neon SQL editor after setting your organizer e-mail on its first lines. It queues no e-mails. The sample students use `@example.test` addresses and appear in the organizer's registrations list and CSV, so remove them before a real event: run `scripts/sample_data_remove.sql` (it deletes only rows slugged `sample-` or with an auth id starting `sample|`).
+
+## 7. The website (Vercel)
+
+The website is the `frontend/` folder of this repository, deployed on Vercel's free plan.
+
+1. vercel.com, **Add New, Project**, import the repository.
+2. Set **Root Directory** to `frontend`. Add the environment variable `NITRO_PRESET` = `vercel`.
+3. Deploy. Every push to the main branch redeploys.
+4. Give the API the site's address, or the browser will block every call: on Render, set
+   `CORS_ALLOW_ORIGINS` to `https://<your-site>.vercel.app` (several addresses separated by commas;
+   no trailing slash, no quotes). Check it with `curl.exe -s -i -X OPTIONS <api>/events -H "Origin: <site>" -H "Access-Control-Request-Method: GET"`:
+   the reply must include `access-control-allow-origin`.
+5. Settings that live in the code, in `frontend/src/config.ts`: the API address, Clerk's publishable
+   key (public by design) and the organizers' contact details shown in the footer.
+
+**Who sees what.** Everyone signs in with Clerk and starts as a participant. Staff roles are set in the
+database, never in the site (see section 3): `UPDATE users SET role = 'organizer' WHERE email = '...';`
+(`volunteer` for people who only scan). The Staff link then appears for them.
+
+**QR codes** hold a link to `/scan`, so a phone's ordinary camera app opens the scanner page, which checks
+the person in once the volunteer is signed in. The scanner also reads an older bare-token code.
+
+**Known limits.** The free Render API sleeps after 15 minutes idle, so the first request after a quiet
+spell takes about 35 seconds; the site shows a "waking the server" banner. A Clerk development instance
+is capped at 100 users and shows a development banner: a real event needs a domain and a Clerk
+production instance. The sample students (section 6) must be removed before a real event.
+
+**Check on a phone before an event** (each row is a failure the site is built to survive):
+
+| Try this | Expect |
+|---|---|
+| Open the site after 20 idle minutes | A "waking the server" banner, then the events |
+| Register, then double-tap Register | One registration |
+| Fill a category (capacity 1), register a second account | The second gets the waitlist; cancelling the first promotes the second |
+| Airplane mode, then Register; turn it back on and tap again | A network message, then success, once |
+| Open My registrations, Show QR, switch to airplane mode, reopen it | The saved code still shows |
+| Scan a QR with the phone's own camera | The scanner page opens and checks in (green); a second scan is amber |
+| A participant opens `/organizer` or `/scan` | "This page is for event staff" |
+| An organizer deletes an event that has registrations | "Close it instead" |

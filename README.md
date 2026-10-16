@@ -79,6 +79,22 @@ The tests run against **real PostgreSQL** (a throwaway `sportreg_test` database 
 real Alembic migration), never SQLite, because concurrency is the whole point. The Redis tests
 use a real Redis too; they skip if it is not running (`docker compose up -d redis`).
 
+### The website
+
+The web app lives in `frontend/` (TanStack Start, React, Tailwind) and talks to the API over HTTPS.
+You need Node 20+.
+
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:5173 (its API address and Clerk key are in src/config.ts)
+npx tsc --noEmit       # type check
+npm test               # 77 unit and component tests
+npm run build
+```
+
+A local site calling the deployed API needs its origin in `CORS_ALLOW_ORIGINS` (see DEPLOY.md).
+
 ### Load test
 
 ```bash
@@ -101,8 +117,9 @@ alembic/      migrations (no create_all in app code)
 tests/        real-Postgres tests, one file per feature
 loadtests/    Locust scenarios, runner, invariant check, results/
 render.yaml   free Render Blueprint   render.paid.yaml  full architecture
-scripts/      send_test_email (email deliverability), smoke_test_deployed (20-step live check)
+scripts/      send_test_email, smoke_test_deployed (20-step live check), seed_demo_event, sample_data.sql (demo data)
 tools/        clerk_test (sign-in test page: shows your token, builds PowerShell commands)
+frontend/     the website: src/lib (API client, idempotency, scan, organizer rules), src/routes, src/components
 DEPLOY.md     deployment guide
 ```
 
@@ -111,6 +128,7 @@ DEPLOY.md     deployment guide
 [DEPLOY.md](DEPLOY.md) covers a **free** setup (one Render web service running the API, the
 email worker and migrations; Neon for Postgres; Brevo for email; Clerk for sign-in) and points
 to `render.paid.yaml` for the full architecture (separate worker, Redis, managed Postgres).
+The website deploys separately on Vercel from the `frontend/` folder (DEPLOY.md, section 7).
 Before relying on email, send yourself a real test:
 `python -m scripts.send_test_email you@gmail.com`.
 
@@ -120,4 +138,5 @@ Before relying on email, send yourself a real test:
 - [DESIGN.md](DESIGN.md): why it works the way it does, plus the bug log.
 - [decisions.md](decisions.md): plain-language decision log per milestone.
 - [LOADTEST.md](LOADTEST.md): measured results and their limits.
-- [DEPLOY.md](DEPLOY.md): putting it online.
+- [DEPLOY.md](DEPLOY.md): putting it online (API, website, sample data).
+- [FRONTEND_PLAN.md](FRONTEND_PLAN.md): the website's plan, the API gaps it needed closed, and its failure matrix.

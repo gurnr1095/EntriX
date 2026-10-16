@@ -107,9 +107,6 @@ function Manager({ id }: { id: string }) {
               {nextStatusLabel(e.status)}
             </Button>
           )}
-          <Button variant="outline" className="min-h-11 px-6 text-destructive" onClick={() => setConfirmDelete(true)}>
-            <Trash2 />Delete event
-          </Button>
         </div>
       </div>
 
@@ -120,7 +117,7 @@ function Manager({ id }: { id: string }) {
           <TabsTrigger value="stats" className="min-h-11">Stats</TabsTrigger>
           <TabsTrigger value="registrations" className="min-h-11">Registrations</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview"><Overview event={e} /></TabsContent>
+        <TabsContent value="overview"><Overview event={e} onDelete={() => setConfirmDelete(true)} /></TabsContent>
         <TabsContent value="categories"><Categories event={e} /></TabsContent>
         <TabsContent value="stats"><Stats event={e} /></TabsContent>
         <TabsContent value="registrations"><Registrations event={e} /></TabsContent>
@@ -162,28 +159,43 @@ function Manager({ id }: { id: string }) {
   );
 }
 
-function Overview({ event }: { event: EventDetail }) {
+function Overview({ event, onDelete }: { event: EventDetail; onDelete: () => void }) {
   const qc = useQueryClient();
   return (
-    <Card className="max-w-2xl rounded-none">
-      <CardContent className="p-5 sm:p-6">
-        <EventForm
-          mode="edit"
-          initial={event}
-          submitLabel="Save changes"
-          onSubmit={async (v) => {
-            await api.patchEvent(event.id, {
-              name: v.name, description: v.description, venue: v.venue, starts_at: v.starts_at,
-              ends_at: v.ends_at, reg_opens_at: v.reg_opens_at, reg_closes_at: v.reg_closes_at,
-            });
-            toast.success("Event saved.");
-            void qc.invalidateQueries({ queryKey: orgKeys.event(event.id) });
-            void qc.invalidateQueries({ queryKey: orgKeys.events });
-            void qc.invalidateQueries({ queryKey: ["event", event.id] });
-          }}
-        />
-      </CardContent>
-    </Card>
+    <div className="max-w-2xl space-y-10">
+      <Card>
+        <CardContent className="p-5 sm:p-6">
+          <EventForm
+            mode="edit"
+            initial={event}
+            submitLabel="Save changes"
+            onSubmit={async (v) => {
+              await api.patchEvent(event.id, {
+                name: v.name, description: v.description, venue: v.venue, starts_at: v.starts_at,
+                ends_at: v.ends_at, reg_opens_at: v.reg_opens_at, reg_closes_at: v.reg_closes_at,
+              });
+              toast.success("Event saved.");
+              void qc.invalidateQueries({ queryKey: orgKeys.event(event.id) });
+              void qc.invalidateQueries({ queryKey: orgKeys.events });
+              void qc.invalidateQueries({ queryKey: ["event", event.id] });
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {/* A rare, serious action: kept apart from the everyday buttons, in a block of its own. */}
+      <div className="flex flex-col gap-4 bg-destructive/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Delete this event</h3>
+          <p className="max-w-md text-base">
+            Removes the event and its categories for good. Only possible while nobody has registered; once people have, close the event instead.
+          </p>
+        </div>
+        <Button variant="destructive" className="min-h-11 shrink-0 px-6 font-semibold" onClick={onDelete}>
+          <Trash2 />Delete event
+        </Button>
+      </div>
+    </div>
   );
 }
 

@@ -1,5 +1,13 @@
 # M6 Frontend plan
 
+> **Status: built and deployed.** The plan below is the original design and still explains why the API
+> gained CORS, richer `/me` endpoints and organizer reads (M6a, done). Two decisions changed on the
+> way: Lovable produced only the first shell and its credits ran out, so everything with logic was
+> written and tested in `frontend/` here (77 tests), and the hosting is Vercel, not Lovable. The look
+> was redone afterwards (black and yellow, seat counts as the loudest type). What was built, and the
+> bugs found by running it, are in decisions.md entries 57 to 59. `lovable_kit/` is kept only as the
+> record of how the first version was briefed.
+
 Goal: a website students, organizers and volunteers can use on a phone, built by Lovable, that
 cannot lose or double a registration even when the server is asleep, the token has expired or the
 network drops. I design and verify; Lovable only draws screens.
